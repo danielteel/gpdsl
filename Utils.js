@@ -1,6 +1,6 @@
 class Utils{
     static isAboutEquals(a,b){
-        if (Math.abs(a-b)<0.000001){
+        if (Math.abs(a-b)<0.0000001){
             return true;
         }
         return false;

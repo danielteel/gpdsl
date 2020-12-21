@@ -2,6 +2,7 @@ const Utils = require("./Utils");
 
 const TokenType = {
 	LineDelim: Symbol(";"),
+	NewLine: Symbol("newline"),
 
 	Double: Symbol("double"),
 	String: Symbol("string"),
@@ -100,6 +101,8 @@ class Tokenizer {
 		this.errorObj = null;
 
 		this.tokens = [];
+
+		this.currentLineText=this.look;
 	}
 
 	tokenize() {
@@ -108,6 +111,9 @@ class Tokenizer {
 		while (this.isNotEnd()) {
 			if (!this.next()) break;
 		}
+	
+		this.addToken(TokenType.NewLine, this.currentLineText?.trim());
+
 		return this.errorObj;
 	}
 
@@ -129,13 +135,17 @@ class Tokenizer {
 		if (this.isNotEnd()) {
 			this.lookIndex++;
 			this.look = this.code[this.lookIndex];
+
+			if (this.look) this.currentLineText+=this.look;
 		}
 	}
 
 	skipWhite() {
 		while (this.isNotEnd() && Utils.isSpace(this.look)) {
 			if (this.look === '\n') {
-				this.currentCodeLine ++;
+				this.currentCodeLine++;
+				this.addToken(TokenType.NewLine, this.currentLineText.trimEnd());
+				this.currentLineText="";
 			}
 			this.getChar();
 		}

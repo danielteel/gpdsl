@@ -89,16 +89,20 @@ class Interpreter {
             return errorRecvd;
         }
 
+        //program.printDebugView();
+
         errorRecvd=program.link();
         if (errorRecvd){
             console.log("Error during link: "+errorRecvd.line+" "+errorRecvd.message);
             return errorRecvd;
         }
 
+        //program.printDebugView();
+
         let exitObject=program.execute(executeExternList);
         if (!(exitObject instanceof OpObj)){
             errorRecvd=exitObject;
-            console.log("Error at opcode address="+errorRecvd.line+" "+errorRecvd.message);
+            console.log("Error during execution on line: "+errorRecvd.line+" "+errorRecvd.message);
             return errorRecvd;
         }
 
@@ -107,35 +111,5 @@ class Interpreter {
     }
 }
 
-
-
-
-
-//Example usage below
-function print(popFn){
-    let str=popFn();
-
-    console.log(str.value);
-    return new BoolObj(null, true, false);
-}
-
-const code=`
-    this=this+1;
-    print(tostring(this,null));
-`;
-
-let importThis = new NumberObj("this", 17, false);
-
-let interpreter=new Interpreter();
-
-interpreter.runCode( 
-                    code,                                                   //The code to run
-                    importThis,                                             //Importing a string variable
-                    Interpreter.funcDef("print", print, "bool", "string"),  //importing print (returns a bool, accepts a string)
-                   );
-
-console.log("importThis.value = "+importThis.value);
-
-
-module.exports=Interpreter;
+module.exports={Interpreter, StringObj, NumberObj, BoolObj};
 
