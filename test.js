@@ -13,33 +13,10 @@ double reverseInteger(double number) {
     return newNumber;
 }
 
-string toFraction(double number) {
-    double numerator=number;
-    double denominator=1;
-    while (abs(floor(numerator)-numerator)>0.000001){
-        numerator=numerator*10;
-        denominator=denominator*10;
-    }
-
-    double maxDivider=10000;
-
-    for (double i = 2;i<maxDivider;i=i+1){
-        if (numerator%i==0 && denominator%i==0){
-            numerator=numerator/i;
-            denominator=denominator/i;
-            i=1;
-        }
-    }
-    return tostring(number,null)+" = "+tostring(numerator, 0)+"/"+tostring(denominator, 0);
-};
-
-double num=123456789;
-
-string message=tostring(num, null)+" reversed is "+tostring(reverseInteger(num), null);
-for (double i=-1;i<1;i=i+.01){
-    print(toFraction(i));
+for (double i=0;i<50000;i=i+1){
+    reverseInteger(i);
 }
-exit message;
+print(tostring(reverseInteger(123456789),null));
 `;
 
 const {Interpreter, StringObj, NumberObj, BoolObj} = require('./Interpreter');

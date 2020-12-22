@@ -91,11 +91,17 @@ class Program {
 	static unlinkedNilBool(){				return {type: UnlinkedType.nilBool}; }
 	static unlinkedNilString(){				return {type: UnlinkedType.nilString}; }
 
+	static CodeState = {
+		BUILDING: 0,
+		OPTIMIZED: 1,
+		READY: 2,
+	}
+
 	constructor(){
 		this.errorObj=null;
 		this.code=[];
 
-		this.linkedCode=[];
+		this.codeState=Program.CodeState.BUILDING;
 
 		this.debugCodeLine=1;
 
@@ -107,7 +113,162 @@ class Program {
 		this.zero=new NumberObj("zero",0,true);
 	}
 
+
+	unlinkedsEqual(obj, obj1){
+		if (obj.type!==obj1.type) return false;
+		if (obj.type===UnlinkedType.register){
+			if (obj.register!==obj1.register) return false;
+			return true;
+		}
+		switch (obj.type){
+			case UnlinkedType.double:
+			case UnlinkedType.bool:
+			case UnlinkedType.string:
+				if (obj.scope!==obj1.scope || obj.index!==obj1.index) return false;
+				return true;
+
+			case UnlinkedType.doubleLiteral:
+			case UnlinkedType.boolLiteral:
+			case UnlinkedType.stringLiteral:
+				if (obj.value!==obj1.value) return false;
+				return true;
+		}
+		return true;//must be a nil literal			
+	}
+
+	isBOnAOp(opcode){
+		switch (opcode.type){
+			case OpCode.tostring:
+			case OpCode.concat:
+			case OpCode.min:
+			case OpCode.max:
+			case OpCode.and:
+			case OpCode.or:
+			case OpCode.add:
+			case OpCode.sub:
+			case OpCode.mul:
+			case OpCode.div:
+			case OpCode.mod:
+			case OpCode.exponent: 
+				return true;
+		}
+		return false;
+	}
+
+	optimize(){
+		for (let i=0;i<this.code.length;i++){//Remove codelines, only good for debuggings
+			if (this.code[i].type===OpCode.codeline){
+				this.code.splice(i, 1);
+				i=i-1;
+			}
+		}
+
+		let stillOptimizing=true;
+		while (stillOptimizing){
+			stillOptimizing=false;
+			for (let i=0;i<this.code.length-1;i++){
+				let cur=this.code[i];
+				let nxt=this.code[i+1];
+				let nxtnxt=i<this.code.length-2?this.code[i+2]:null;
+
+				switch (cur.type){
+					case OpCode.push:
+						if (nxt.type===OpCode.mov && nxtnxt?.type===OpCode.pop){
+							if (!this.unlinkedsEqual(cur.obj0, nxt.obj0)){
+								this.code[i+2]={type: OpCode.mov, obj0: nxtnxt.obj0, obj1: cur.obj0};
+								this.code.splice(i,1);
+								i--;
+								stillOptimizing=true;
+							}
+						}
+						break;
+					case OpCode.mov:
+						if (nxt.type===OpCode.add && nxtnxt?.type===OpCode.mov){// MOV ADD MOV => ADD
+							if (nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register){
+								if (this.unlinkedsEqual(nxt.obj0, nxtnxt.obj1) && (this.unlinkedsEqual(cur.obj0, nxt.obj1) || this.unlinkedsEqual(cur.obj0, nxt.obj0))){
+									if (this.unlinkedsEqual(cur.obj1, nxtnxt.obj0)){
+										if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
+											nxt.obj1=nxt.obj0;
+										}
+										nxt.obj0=nxtnxt.obj0;
+										this.code.splice(i,1);
+										this.code.splice(i+1,1);
+										i-=2;
+										stillOptimizing=true;
+									}
+								}
+							}
+						}else if (this.isBOnAOp(nxt) && nxtnxt?.type===OpCode.mov){// MOV BONA MOV => BONA
+							if (nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register){
+								if (this.unlinkedsEqual(cur.obj0, nxt.obj0) && this.unlinkedsEqual(cur.obj0, nxtnxt.obj1)){
+									if (this.unlinkedsEqual(cur.obj1, nxtnxt.obj0)){
+										nxt.obj0=cur.obj1;
+										this.code.splice(i,1);
+										this.code.splice(i+1,1);
+										i-=2;
+										stillOptimizing=true;
+									}
+								}
+							}
+						}else if (this.unlinkedsEqual(cur.obj0, cur.obj1)){ 	// mov(X, X) => nothing
+							this.code.splice(i,1);
+							i--;
+							stillOptimizing=true;
+						} else if (nxt.type===OpCode.cmp){           			// mov(eax, X) + cmp(eax, Y) => cmp(X, Y)
+							if (this.unlinkedsEqual(cur.obj0, nxt.obj0)){ 
+								nxt.obj0=cur.obj1;
+								this.code.splice(i,1);
+								i--;
+								stillOptimizing=true;
+							}else if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){	// mov(eax, X) + cmp(Y, eax) => cmp(Y, X)
+								nxt.obj1=cur.obj1;
+								this.code.splice(i,1);
+								i--;
+								stillOptimizing=true;
+							}
+						} else if (this.isBOnAOp(nxt)){							// mov(eax, X) + add(Y, eax) => add(Y, X)
+							if (cur.obj0.type===UnlinkedType.register){
+								if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
+									nxt.obj1=cur.obj1;					
+									this.code.splice(i,1);
+									i--;
+									stillOptimizing=true;
+								}
+							}
+						} else if (nxt.type===OpCode.push){
+							if (cur.obj0.type===UnlinkedType.register && cur.obj1.type!==UnlinkedType.register){
+									if (nxt.obj0.register===cur.obj0.register){
+										nxt.obj0=cur.obj1;
+										this.code.splice(i,1);
+										i--;
+										stillOptimizing=true;
+									}
+							}
+						}else if (nxt.type===OpCode.mov){
+							if (cur.obj0.type===UnlinkedType.register && this.unlinkedsEqual(cur.obj0, nxt.obj1)){
+								if (cur.obj1!==UnlinkedType.register){
+									nxt.obj1=cur.obj1;
+									this.code.splice(i,1);
+									i--;
+									stillOptimizing=true;
+								}
+							}
+						}
+						break;
+				}
+			}			
+		}
+
+
+		this.codeState=Program.CodeState.OPTIMIZED;
+	}
+
 	link(){//TODO remove label objects instead of leaving them in for optimization
+		if (this.codeState===Program.CodeState.READY) return null;
+		if (this.codeState===Program.CodeState.BUILDING){
+			this.optimize();
+			if (this.codeState!==Program.CodeState.OPTIMIZED) return Utils.newErrorObj("error optimizing.");
+		}
 		const labelMap = new Map();
 		for (let i=0;i<this.code.length;i++){//Make a map of all the labels and there indexes
 			if (this.code[i].type===OpCode.label){
@@ -115,7 +276,9 @@ class Program {
 					return Utils.newErrorObj("error linking, "+this.code[i].id+" was already defined.");
 				}
 				labelMap.set(this.code[i].id, i);
-				this.code[i].id=i;
+
+				this.code.splice(i,1);
+				i--;
 			}
 		}
 
@@ -129,6 +292,8 @@ class Program {
 					break;
 			}
 		}
+		
+		this.codeState=Program.CodeState.READY;
 		return null;
 	}
 
@@ -153,7 +318,8 @@ class Program {
 			case UnlinkedType.doubleLiteral:
 				return new NumberObj(null, obj.value, true);
 			case UnlinkedType.boolLiteral:
-				return new BoolObj(null, obj.value, true);
+				if (obj.value) return this.true;
+				return this.false;
 			case UnlinkedType.stringLiteral:
 				return new StringObj(null, obj.value, true);
 
@@ -173,6 +339,10 @@ class Program {
 	}
 
 	execute(externals){
+		if (this.codeState!==Program.CodeState.READY){
+			let linkError = this.link();
+			if (linkError) return linkError;
+		}
 		this.debugCodeLine=1;
 
 		let notDone=true;
@@ -191,7 +361,6 @@ class Program {
 		let errMsg=null;
 		
 			while (notDone && eip<this.code.length){
-				if (eip===120) debugger;
 				let opcode=this.code[eip];
 				let obj0=null;
 				let obj1=null;
@@ -202,12 +371,18 @@ class Program {
 						break;
 					case OpCode.jmp:
 						eip=opcode.id;
-						break;
+						continue;
 					case OpCode.je:
-						if (flag_e) eip=opcode.id;
+						if (flag_e){
+							eip=opcode.id;
+							continue;
+						}
 						break;
 					case OpCode.jne:
-						if (!flag_e) eip=opcode.id;
+						if (!flag_e){
+							eip=opcode.id;
+							continue;
+						}
 						break;
 					case OpCode.test:
 						flag_e=!link(opcode.obj0).value;
@@ -283,7 +458,7 @@ class Program {
 					case OpCode.call:
 						callStack.push(eip+1);
 						eip=opcode.id;
-						break;
+						continue;
 					case OpCode.ret:
 						eip=callStack.pop();
 						continue;
@@ -529,12 +704,13 @@ class Program {
 		return null;										
 	}
 
-	printDebugView(){
+	printDebugView(onlyPrintOpCodes=false){
 		let codeLine=0;
 		let asm="";
-		console.log("\x1b[0m\x1b[37mDISASSEMBLED VIEW")
+		console.log("\x1b[0m\x1b[37mDISASSEMBLED VIEW - Length: "+this.code.reduce((prev, cur)=>(prev+(cur.type!==OpCode.codeline)),0))
 		for (let eip=0;eip<this.code.length;eip++){
 			let opcode=this.code[eip];
+			
 			switch (opcode.type){
 				case OpCode.label:
 					asm+="\t\x1b[36m"+opcode.id+":\n";
@@ -645,7 +821,8 @@ class Program {
 					asm+="\t\x1b[33mpop "+this.linkToEnglish(opcode.obj0)+"\n";
 					break;
 				case OpCode.codeline:
-					///////////////////////////////////////
+					if (onlyPrintOpCodes) break;
+
 					if (opcode.code!==null){
 						codeLine++;
 						console.log("\x1b[32m"+codeLine+") \x1b[37m"+opcode.code.trim());

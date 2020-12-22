@@ -89,24 +89,25 @@ class Interpreter {
             return errorRecvd;
         }
 
-        //program.printDebugView();
-
         errorRecvd=program.link();
         if (errorRecvd){
             console.log("Error during link: "+errorRecvd.line+" "+errorRecvd.message);
             return errorRecvd;
         }
+        program.printDebugView(false);
 
-        //program.printDebugView();
-
+        const startTime = new Date().getTime();
         let exitObject=program.execute(executeExternList);
+        const endTime = new Date().getTime();
+
         if (!(exitObject instanceof OpObj)){
             errorRecvd=exitObject;
             console.log("Error during execution on line: "+errorRecvd.line+" "+errorRecvd.message);
             return errorRecvd;
         }
-
+        
         console.log("Exit value:"+exitObject.value);
+        console.log("Execution time: "+(endTime-startTime));
         return exitObject;
     }
 }

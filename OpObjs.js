@@ -37,6 +37,9 @@ class RegisterObj extends OpObj {
 	constructor(name){
 		super(name, OpObjType.register, null, false);
 		this._curValType=OpObjType.num;
+		this.stringObj=new StringObj(null, null, false);
+		this.boolObj=new BoolObj(null, null, false);
+		this.numberObj=new NumberObj(null, null, false);
 	}
 
 	getCopy(asNative){
@@ -65,11 +68,14 @@ class RegisterObj extends OpObj {
 	getNativeObj(){
 		switch (this._curValType){
 		case OpObjType.string:
-			return new StringObj("",this._value, true);
+			this.stringObj._value=this._value;
+			return this.stringObj;
 		case OpObjType.bool:
-			return new BoolObj("", this._value, true);
+			this.boolObj._value=this._value;
+			return this.boolObj;
 		case OpObjType.num:
-			return new NumberObj("", this._value, true);
+			this.numberObj._value=this._value;
+			return this.numberObj;
 		}
 	}
 
@@ -207,7 +213,7 @@ class NumberObj extends OpObj {
 				this._value=obj._value===null ? null : Number(obj._value);
 				break;
 			case OpObjType.num:
-				this._value=Math.round(obj._value*10000000)/10000000;
+				this._value=obj._value;
 				break;
 			default:
 				return "Tried to set number to invalid type";
