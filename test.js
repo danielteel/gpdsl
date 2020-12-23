@@ -13,11 +13,11 @@ double reverseInteger(double number) {
     return newNumber;
 }
 
-for (double i=0;i<50000;i=i+1){
-    reverseInteger(i);
+for (double i=0;i<=500000;i=i+1){
+   string m=tostring(reverseInteger(i),null);
 }
-print(tostring(reverseInteger(123456789),null));
 `;
+
 
 const {Interpreter, StringObj, NumberObj, BoolObj} = require('./Interpreter');
 

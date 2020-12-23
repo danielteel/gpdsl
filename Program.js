@@ -4,16 +4,24 @@ const {OpObjType, OpObj, RegisterObj, StringObj, NumberObj, BoolObj} = require('
 const OpCode = {
 	label:      Symbol("label"),
 	jmp:        Symbol("jmp"),
+
+	cmp:        Symbol("cmp"),
+	test:       Symbol("test"),
+	
 	je:         Symbol("je"),
 	jne:        Symbol("jne"),
-	test:       Symbol("test"),
-	cmp:        Symbol("cmp"),
+	ja:			Symbol("ja"),
+	jae:		Symbol("jae"),
+	jb:			Symbol("jb"),
+	jbe:		Symbol("jbe"),
+
 	se:         Symbol("se"),
 	sne:        Symbol("sne"),
 	sa:         Symbol("sa"),
 	sae:        Symbol("sae"),
 	sb:         Symbol("sb"),
 	sbe:        Symbol("sbe"),
+
 	exit:       Symbol("exit"),
 	ceil:       Symbol("ceil"),
 	floor:      Symbol("floor"),
@@ -155,6 +163,43 @@ class Program {
 		return false;
 	}
 
+	isSetOpCode(opCode){
+		if ([OpCode.se, OpCode.sne, OpCode.sa, OpCode.sae, OpCode.sb, OpCode.sbe].includes(opCode.type)){
+			return true;
+		}
+		return false;
+	}
+
+	optimizeSetToJmp(setOpCode, jmpOpCode){
+		if (jmpOpCode.type!==OpCode.je && jmpOpCode.type!==OpCode.jne) return null;
+		const opp = jmpOpCode.type===OpCode.je;
+		let jmpOp = {type: null, id: jmpOpCode.id};
+
+		switch (setOpCode.type){
+		case OpCode.se:
+			jmpOp.type = opp ? OpCode.jne : OpCode.je;
+			break;
+		case OpCode.sne:
+			jmpOp.type = opp ? OpCode.je : OpCode.jne;
+			break;
+		case OpCode.sa:
+			jmpOp.type = opp ? OpCode.jbe : OpCode.ja;
+			break;
+		case OpCode.sae:
+			jmpOp.type = opp ? OpCode.jb : OpCode.jae;
+			break;
+		case OpCode.sb:
+			jmpOp.type = opp ? OpCode.jae : OpCode.jb;
+			break;
+		case OpCode.sbe:
+			jmpOp.type = opp ? OpCode.ja : OpCode.jbe;
+			break;
+		default:
+			return null;
+		}
+		return jmpOp;
+	}
+
 	optimize(){
 		for (let i=0;i<this.code.length;i++){//Remove codelines, only good for debuggings
 			if (this.code[i].type===OpCode.codeline){
@@ -170,8 +215,22 @@ class Program {
 				let cur=this.code[i];
 				let nxt=this.code[i+1];
 				let nxtnxt=i<this.code.length-2?this.code[i+2]:null;
+				let nxtnxtnxt=i<this.code.length-3?this.code[i+3]:null;
 
 				switch (cur.type){
+					case OpCode.cmp:
+						if (this.isSetOpCode(nxt) && nxtnxt.type===OpCode.test && (nxtnxtnxt.type===OpCode.je || nxtnxtnxt.type===OpCode.jne)){
+							if (nxt.obj0.type===UnlinkedType.register && this.unlinkedsEqual(nxt.obj0, nxtnxt.obj0)){
+								let newJmpOp = this.optimizeSetToJmp(nxt, nxtnxtnxt);
+								if (newJmpOp){
+									this.code[i+1]=newJmpOp;
+									this.code.splice(i+2,2);
+									i--;
+									stillOptimizing=true;
+								}
+							}
+						}
+						break;
 					case OpCode.push:
 						if (nxt.type===OpCode.mov && nxtnxt?.type===OpCode.pop){
 							if (!this.unlinkedsEqual(cur.obj0, nxt.obj0)){
@@ -183,38 +242,43 @@ class Program {
 						}
 						break;
 					case OpCode.mov:
-						if (nxt.type===OpCode.add && nxtnxt?.type===OpCode.mov){// MOV ADD MOV => ADD
-							if (nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register){
-								if (this.unlinkedsEqual(nxt.obj0, nxtnxt.obj1) && (this.unlinkedsEqual(cur.obj0, nxt.obj1) || this.unlinkedsEqual(cur.obj0, nxt.obj0))){
-									if (this.unlinkedsEqual(cur.obj1, nxtnxt.obj0)){
-										if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
-											nxt.obj1=nxt.obj0;
-										}
-										nxt.obj0=nxtnxt.obj0;
-										this.code.splice(i,1);
-										this.code.splice(i+1,1);
-										i-=2;
-										stillOptimizing=true;
-									}
+						if (this.unlinkedsEqual(cur.obj0, cur.obj1)){ 	// mov(X, X) => nothing
+							this.code.splice(i,1);
+							stillOptimizing=true;
+						}else if (nxt.type===OpCode.add && nxtnxt?.type===OpCode.mov &&// MOV ADD MOV => ADD
+							nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register &&
+							this.unlinkedsEqual(nxt.obj0, nxtnxt.obj1) && (this.unlinkedsEqual(cur.obj0, nxt.obj1) || this.unlinkedsEqual(cur.obj0, nxt.obj0))){
+
+							if (this.unlinkedsEqual(cur.obj1, nxtnxt.obj0)){
+								if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
+									nxt.obj1=nxt.obj0;
 								}
+								nxt.obj0=nxtnxt.obj0;
+								this.code.splice(i,1);
+								this.code.splice(i+1,1);
+								i--;
+								stillOptimizing=true;
 							}
-						}else if (this.isBOnAOp(nxt) && nxtnxt?.type===OpCode.mov){// MOV BONA MOV => BONA
-							if (nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register){
-								if (this.unlinkedsEqual(cur.obj0, nxt.obj0) && this.unlinkedsEqual(cur.obj0, nxtnxt.obj1)){
-									if (this.unlinkedsEqual(cur.obj1, nxtnxt.obj0)){
-										nxt.obj0=cur.obj1;
-										this.code.splice(i,1);
-										this.code.splice(i+1,1);
-										i-=2;
-										stillOptimizing=true;
-									}
-								}
-							}
-						}else if (this.unlinkedsEqual(cur.obj0, cur.obj1)){ 	// mov(X, X) => nothing
+						}else if (nxt.type===OpCode.mov && this.isBOnAOp(nxtnxt) && cur.obj0.type===UnlinkedType.register
+								  && this.unlinkedsEqual(cur.obj0, nxtnxt.obj1) && this.unlinkedsEqual(nxt.obj0, nxtnxt.obj0)
+								  && !this.unlinkedsEqual(cur.obj0, nxt.obj1) && !this.unlinkedsEqual(cur.obj0, nxt.obj0)){
+							
+							nxtnxt.obj1=cur.obj1;
 							this.code.splice(i,1);
 							i--;
 							stillOptimizing=true;
-						} else if (nxt.type===OpCode.cmp){           			// mov(eax, X) + cmp(eax, Y) => cmp(X, Y)
+						}else if (this.isBOnAOp(nxt) && nxtnxt?.type===OpCode.mov && // MOV BONA MOV => BONA
+								  nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register &&
+								  this.unlinkedsEqual(cur.obj0, nxt.obj0) && this.unlinkedsEqual(cur.obj0, nxtnxt.obj1)){
+
+							if (this.unlinkedsEqual(cur.obj1, nxtnxt.obj0)){
+								nxt.obj0=cur.obj1;
+								this.code.splice(i,1);
+								this.code.splice(i+1,1);
+								i--;
+								stillOptimizing=true;
+							}
+						} else if (nxt.type===OpCode.cmp && (this.unlinkedsEqual(cur.obj0, nxt.obj0) || this.unlinkedsEqual(cur.obj0, nxt.obj1))){// mov(eax, X) + cmp(eax, Y) => cmp(X, Y)
 							if (this.unlinkedsEqual(cur.obj0, nxt.obj0)){ 
 								nxt.obj0=cur.obj1;
 								this.code.splice(i,1);
@@ -226,33 +290,25 @@ class Program {
 								i--;
 								stillOptimizing=true;
 							}
-						} else if (this.isBOnAOp(nxt)){							// mov(eax, X) + add(Y, eax) => add(Y, X)
-							if (cur.obj0.type===UnlinkedType.register){
-								if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
-									nxt.obj1=cur.obj1;					
-									this.code.splice(i,1);
-									i--;
-									stillOptimizing=true;
-								}
+						} else if (this.isBOnAOp(nxt) && cur.obj0.type===UnlinkedType.register && cur.obj0.type===UnlinkedType.register){// mov(eax, X) + add(Y, eax) => add(Y, X)
+							if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
+								nxt.obj1=cur.obj1;					
+								this.code.splice(i,1);
+								i--;
+								stillOptimizing=true;
 							}
-						} else if (nxt.type===OpCode.push){
-							if (cur.obj0.type===UnlinkedType.register && cur.obj1.type!==UnlinkedType.register){
-									if (nxt.obj0.register===cur.obj0.register){
-										nxt.obj0=cur.obj1;
-										this.code.splice(i,1);
-										i--;
-										stillOptimizing=true;
-									}
+						} else if (nxt.type===OpCode.push && cur.obj0.type===UnlinkedType.register && cur.obj1.type!==UnlinkedType.register){
+							if (nxt.obj0.register===cur.obj0.register){
+								nxt.obj0=cur.obj1;
+								this.code.splice(i,1);
+								i--;
+								stillOptimizing=true;
 							}
-						}else if (nxt.type===OpCode.mov){
-							if (cur.obj0.type===UnlinkedType.register && this.unlinkedsEqual(cur.obj0, nxt.obj1)){
-								if (cur.obj1!==UnlinkedType.register){
-									nxt.obj1=cur.obj1;
-									this.code.splice(i,1);
-									i--;
-									stillOptimizing=true;
-								}
-							}
+						}else if (nxt.type===OpCode.mov && cur.obj0.type===UnlinkedType.register && this.unlinkedsEqual(cur.obj0, nxt.obj1) && cur.obj1!==UnlinkedType.register){
+							nxt.obj1=cur.obj1;
+							this.code.splice(i,1);
+							i--;
+							stillOptimizing=true;
 						}
 						break;
 				}
@@ -287,6 +343,10 @@ class Program {
 				case OpCode.jmp:
 				case OpCode.je:
 				case OpCode.jne:
+				case OpCode.ja:
+				case OpCode.jae:
+				case OpCode.jb:
+				case OpCode.jbe:
 				case OpCode.call:
 					this.code[i].id=labelMap.get(this.code[i].id);
 					break;
@@ -367,11 +427,36 @@ class Program {
 				let obj2=null;
 				switch (opcode.type){
 					case OpCode.label:
-						//dont do nothing, essentially a NOP
 						break;
+
+					case OpCode.excall:
+						if ( (errMsg=this.eax.setTo(externals[opcode.id]( () => stack.pop() ))) !==null ) return this.executionError(opcode, errMsg);
+						break;
+					case OpCode.call:
+						callStack.push(eip+1);
+						eip=opcode.id;
+						continue;
+					case OpCode.ret:
+						eip=callStack.pop();
+						continue;
+
+					case OpCode.exit:
+						return (link(opcode.obj0).getCopy(true));
+
 					case OpCode.jmp:
 						eip=opcode.id;
 						continue;
+					case OpCode.test:
+						flag_e=!link(opcode.obj0).value;
+						break;
+					case OpCode.cmp:
+						obj0=link(opcode.obj0);
+						obj1=link(opcode.obj1);
+						flag_e=obj0.eqaulTo(obj1);
+						flag_a=obj0.greaterThan(obj1);
+						flag_b=obj0.smallerThan(obj1);
+						break;
+
 					case OpCode.je:
 						if (flag_e){
 							eip=opcode.id;
@@ -384,16 +469,31 @@ class Program {
 							continue;
 						}
 						break;
-					case OpCode.test:
-						flag_e=!link(opcode.obj0).value;
+					case OpCode.ja:
+						if (flag_a){
+							eip=opcode.id;
+							continue;
+						}
 						break;
-					case OpCode.cmp:
-						obj0=link(opcode.obj0);
-						obj1=link(opcode.obj1);
-						flag_e=obj0.eqaulTo(obj1);
-						flag_a=obj0.greaterThan(obj1);
-						flag_b=obj0.smallerThan(obj1);
+					case OpCode.jae:
+						if (flag_a || flag_e){
+							eip=opcode.id;
+							continue;
+						}
 						break;
+					case OpCode.jb:
+						if (flag_b){
+							eip=opcode.id;
+							continue;
+						}
+						break;
+					case OpCode.jbe:
+						if (flag_b || flag_e){
+							eip=opcode.id;
+							continue;
+						}
+						break;
+
 					case OpCode.se:
 						if ( (errMsg=link(opcode.obj0).setTo(flag_e?this.true:this.false)) !==null ) return this.executionError(opcode, errMsg);
 						break;
@@ -412,8 +512,7 @@ class Program {
 					case OpCode.sbe:
 						if ( (errMsg=link(opcode.obj0).setTo(flag_b||flag_e?this.true:this.false)) !==null ) return this.executionError(opcode, errMsg);
 						break;
-					case OpCode.exit:
-						return (link(opcode.obj0).getCopy(true));
+						
 					case OpCode.ceil:
 						obj0 = link(opcode.obj0);
 						if (obj0.value===null) return this.executionError(opcode, "tried to do ceil on null value");	
@@ -452,16 +551,6 @@ class Program {
 						if (obj2.value===null) return this.executionError(opcode, "tried to do clamp on null value");	
 						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.min(Math.max(obj0.value, obj1.value), obj2.value), true) )) !==null ) return this.executionError(opcode, errMsg);
 						break;
-					case OpCode.excall:
-						if ( (errMsg=this.eax.setTo(externals[opcode.id]( () => stack.pop() ))) !==null ) return this.executionError(opcode, errMsg);
-						break;
-					case OpCode.call:
-						callStack.push(eip+1);
-						eip=opcode.id;
-						continue;
-					case OpCode.ret:
-						eip=callStack.pop();
-						continue;
 					case OpCode.todouble:
 						obj0 = link(opcode.obj0);
 						if (obj0.value===null) return this.executionError(opcode, "tried to convert null to double");	
@@ -707,10 +796,10 @@ class Program {
 	printDebugView(onlyPrintOpCodes=false){
 		let codeLine=0;
 		let asm="";
-		console.log("\x1b[0m\x1b[37mDISASSEMBLED VIEW - Length: "+this.code.reduce((prev, cur)=>(prev+(cur.type!==OpCode.codeline)),0))
+		console.log("\x1b[0m\x1b[37mDISASSEMBLED VIEW - Length: "+this.code.reduce((prev, cur)=>(prev+(cur.type!==OpCode.codeline && cur.type!==OpCode.label)),0))
 		for (let eip=0;eip<this.code.length;eip++){
 			let opcode=this.code[eip];
-			
+			if (this.codeState===Program.CodeState.READY) asm+="\x1b[34m"+eip;
 			switch (opcode.type){
 				case OpCode.label:
 					asm+="\t\x1b[36m"+opcode.id+":\n";
@@ -718,12 +807,26 @@ class Program {
 				case OpCode.jmp:
 					asm+="\t\x1b[33mjmp \x1b[36m"+opcode.id+"\n";
 					break;
+
 				case OpCode.je:
 					asm+="\t\x1b[33mje \x1b[36m"+opcode.id+"\n";
 					break;
 				case OpCode.jne:
 					asm+="\t\x1b[33mjne \x1b[36m"+opcode.id+"\n";
 					break;
+				case OpCode.ja:
+					asm+="\t\x1b[33mja \x1b[36m"+opcode.id+"\n";
+					break;
+				case OpCode.jae:
+					asm+="\t\x1b[33mjae \x1b[36m"+opcode.id+"\n";
+					break;
+				case OpCode.jb:
+					asm+="\t\x1b[33mjb \x1b[36m"+opcode.id+"\n";
+					break;
+				case OpCode.jbe:
+					asm+="\t\x1b[33mjbe \x1b[36m"+opcode.id+"\n";
+					break;
+
 				case OpCode.test:
 					asm+="\t\x1b[33mtest "+this.linkToEnglish(opcode.obj0)+"\n";
 					break;

@@ -89,12 +89,15 @@ class Interpreter {
             return errorRecvd;
         }
 
+        program.printDebugView(true);
+
         errorRecvd=program.link();
         if (errorRecvd){
             console.log("Error during link: "+errorRecvd.line+" "+errorRecvd.message);
             return errorRecvd;
         }
-        program.printDebugView(false);
+
+        program.printDebugView(true);
 
         const startTime = new Date().getTime();
         let exitObject=program.execute(executeExternList);
