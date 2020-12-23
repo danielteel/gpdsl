@@ -74,7 +74,7 @@ class Interpreter {
 				}else if (externals[i] instanceof BoolObj){
 					parserExternList.push({name: externals[i].name, type: IdentityType.Bool});
 					executeExternList.push(externals[i]);
-				}else{            
+				}else{
 					parserExternList.push(externals[i]);
 					executeExternList.push(externals[i].func);
 				}
