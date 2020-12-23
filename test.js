@@ -1,6 +1,4 @@
-let code = 
-`
-double reverseInteger(double number) { 
+let code = `double reverseInteger(double number) { 
     double newNumber=0;
     while (number!=0){
         newNumber=newNumber*10+number%10;
@@ -13,11 +11,26 @@ double reverseInteger(double number) {
     return newNumber;
 }
 
-for (double i=0;i<=500000;i=i+1){
-   string m=tostring(reverseInteger(i),null);
+for (double i=0;i<=1000000;i=i+1){
+   reverseInteger(i);
 }
+double i;
+print( tostring(?i, null) );
 `;
 
+code=`
+bool a=0;
+bool b=0;
+bool c=0;
+bool d=0;
+
+double A=1, B=2, C=3, D=4, EL=5;
+exit    a ? A
+      : b ? B
+      : c ? C
+      : d ? D
+      : EL;
+`;
 
 const {Interpreter, StringObj, NumberObj, BoolObj} = require('./Interpreter');
 

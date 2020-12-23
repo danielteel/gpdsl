@@ -241,6 +241,11 @@ class Parser {
 		return false;
 	}
 
+	isTernaryOp(){
+		if (this.token.type===TokenType.Question) return true;
+		return false;
+	}
+
 	doCeil(){
 		if (!this.match(TokenType.Ceil)) return false;
 		if (!this.match(TokenType.LeftParen)) return false;
@@ -326,8 +331,12 @@ class Parser {
 		return this.match(TokenType.RightParen);
 	}
 
-	doFuncCall(allowBool, allowDouble, allowString){
-		let funcName=this.token.value;
+	doFuncCall(allowBool, allowDouble, allowString, funcName=null){
+		let needsIdentMatched=false;
+		if (funcName===null){
+			funcName=this.token.value;
+			needsIdentMatched=true;
+		}
 		let identObj = this.getIdentity(funcName);
 		if (!identObj) return this.setError("Tried to call undefined function'"+funcName+"'");
 
@@ -335,7 +344,9 @@ class Parser {
 		if (identObj.type===TokenType.DoubleFunction && allowDouble===false) return this.setError("Cant call a function ("+funcName+") of type double right here");
 		if (identObj.type===TokenType.StringFunction && allowString===false) return this.setError("Cant call a function ("+funcName+") of type string right here");
 
-		if (!this.match(TokenType.Ident)) return false;
+		if (needsIdentMatched) {
+			if (!this.match(TokenType.Ident)) return false;
+		}
 		if (!this.match(TokenType.LeftParen)) return false;
 
 		for (let i=0;i<identObj.params.length;i++){
@@ -392,10 +403,10 @@ class Parser {
 	}
 	
 	doIsNil(){
-		if (!this.match(TokenType.IsNil)) return false;
+		if (!this.match(TokenType.Question)) return false;
 		const varToken=this.token;
 		if (!this.match(TokenType.Ident)) return false;
-		const varName=varToken;
+		const varName=varToken.value;
 		const identObj = this.getIdentity(varName);
 		if (!identObj) return this.setError("Tried to access undefined '"+varName+"'");
 
@@ -404,34 +415,34 @@ class Parser {
 				this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedDouble(identObj.scope, identObj.index, varName) );
 				this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedNilDouble() );
 				this.program.addSNE( Program.unlinkedReg("eax") );
-				return this.match(TokenType.Ident);
+				return true;
 
 			case IdentityType.Bool:
 				this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedBool(identObj.scope, identObj.index, varName) );
 				this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedNilBool() );
 				this.program.addSNE( Program.unlinkedReg("eax") );
-				return this.match(TokenType.Ident);
+				return true;
 
 			case IdentityType.String:
 				this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedString(identObj.scope, identObj.index, varName) );
 				this.program.addStrCmp( Program.unlinkedReg("eax"), Program.unlinkedNilString() );
 				this.program.addNot( Program.unlinkedReg("eax") );
-				return this.match(TokenType.Ident);
+				return true;
 			
 			case IdentityType.DoubleFunction:
-				if (!this.doFuncCall(false, true, false)) return false;
+				if (!this.doFuncCall(false, true, false, varName)) return false;
 				this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedNilDouble() );
 				this.program.addSNE( Program.unlinkedReg("eax") );
 				return true;
 
 			case IdentityType.BoolFunction:
-				if (!this.doFuncCall(true, false, false)) return false;
+				if (!this.doFuncCall(true, false, false, varName)) return false;
 				this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedNilBool() );
 				this.program.addSNE( Program.unlinkedReg("eax") );
 				return true;
 
 			case IdentityType.StringFunction:
-				if (!this.doFuncCall(false, false, true)) return false;
+				if (!this.doFuncCall(false, false, true, varName)) return false;
 				this.program.addStrCmp( Program.unlinkedReg("eax"), Program.unlinkedNilString() );
 				this.program.addNot( Program.unlinkedReg("eax") );
 				return true;
@@ -502,7 +513,7 @@ class Parser {
 		case TokenType.Ident:
 			return this.doIdent();
 		
-		case TokenType.IsNil:
+		case TokenType.Question:
 			return this.doIsNil();
 			
 		case TokenType.LeftParen:
@@ -698,7 +709,7 @@ class Parser {
 		return true;
 	}
 
-	doExpression(){//Does the or operator
+	doOr(){
 		if (!this.doAnd()) return false;
 		
 		while (this.isNotEnd() && this.isOrOp()){
@@ -711,6 +722,29 @@ class Parser {
 				this.program.addPop( Program.unlinkedReg("ebx") );
 				this.program.addOr( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
 			}
+		}
+		return true;
+	}
+
+	doExpression(){//Does the ternary operator
+		if (!this.doOr()) return false;
+		
+		while (this.isNotEnd() && this.isTernaryOp()){
+			if (!this.match(TokenType.Question)) return false;
+			let falseBranch=this.newBranch();
+			let doneBranch=this.newBranch();
+
+			this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedBoolLiteral(false) );
+			this.program.addJE( falseBranch );
+
+			if (!this.doExpression()) return false;
+			this.program.addJmp( doneBranch );
+
+			if (!this.match(TokenType.Colon)) return false;
+
+			this.program.addLabel( falseBranch );
+			if (!this.doExpression()) return false;
+			this.program.addLabel( doneBranch );
 		}
 		return true;
 	}

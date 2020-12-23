@@ -35,7 +35,8 @@ const TokenType = {
 	Mod: Symbol("%"),
 	Exponent: Symbol("^"),
 
-	IsNil: Symbol("?"),
+	Question: Symbol("?"),
+	Colon: Symbol(":"),
 
 	Assignment: Symbol("="),
 	Equals: Symbol("=="),
@@ -296,7 +297,9 @@ class Tokenizer {
 						return this.addToken(TokenType.Comma);
 
 					case '?':
-						return this.addToken(TokenType.IsNil);
+						return this.addToken(TokenType.Question);
+					case ':':
+						return this.addToken(TokenType.Colon);
 
 					case '{':
 						return this.addToken(TokenType.LeftCurly);

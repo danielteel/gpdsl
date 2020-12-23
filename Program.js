@@ -278,7 +278,7 @@ class Program {
 								i--;
 								stillOptimizing=true;
 							}
-						} else if (nxt.type===OpCode.cmp && (this.unlinkedsEqual(cur.obj0, nxt.obj0) || this.unlinkedsEqual(cur.obj0, nxt.obj1))){// mov(eax, X) + cmp(eax, Y) => cmp(X, Y)
+						} else if (nxt.type===OpCode.cmp && cur.obj0.type==UnlinkedType.register && (this.unlinkedsEqual(cur.obj0, nxt.obj0) || this.unlinkedsEqual(cur.obj0, nxt.obj1))){// mov(eax, X) + cmp(eax, Y) => cmp(X, Y)
 							if (this.unlinkedsEqual(cur.obj0, nxt.obj0)){ 
 								nxt.obj0=cur.obj1;
 								this.code.splice(i,1);
@@ -319,12 +319,13 @@ class Program {
 		this.codeState=Program.CodeState.OPTIMIZED;
 	}
 
-	link(){//TODO remove label objects instead of leaving them in for optimization
+	link(){
 		if (this.codeState===Program.CodeState.READY) return null;
 		if (this.codeState===Program.CodeState.BUILDING){
 			this.optimize();
 			if (this.codeState!==Program.CodeState.OPTIMIZED) return Utils.newErrorObj("error optimizing.");
 		}
+
 		const labelMap = new Map();
 		for (let i=0;i<this.code.length;i++){//Make a map of all the labels and there indexes
 			if (this.code[i].type===OpCode.label){
@@ -399,6 +400,8 @@ class Program {
 	}
 
 	execute(externals){
+		const link = (obj) => this.linkedObject(obj, scopes);
+
 		if (this.codeState!==Program.CodeState.READY){
 			let linkError = this.link();
 			if (linkError) return linkError;
@@ -409,7 +412,6 @@ class Program {
 		let eip = 0;
 
 		let scopes=[[externals]];
-		const link = (obj) => this.linkedObject(obj, scopes);
 
 		let callStack=[];
 		let stack=[];
@@ -906,7 +908,7 @@ class Program {
 					asm+="\t\x1b[33msubstr "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\x1b[33m, "+this.linkToEnglish(opcode.obj2)+"\n";
 					break;
 				case OpCode.tostring:
-					asm+="\t\x1b[33mtostring "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="\t\x1b[33mtostring "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
 					break;
 				case OpCode.concat:
 					asm+="\t\x1b[33mconcat "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
