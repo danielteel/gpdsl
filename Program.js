@@ -2,57 +2,57 @@ const Utils = require("./Utils");
 const {OpObjType, OpObj, RegisterObj, StringObj, NumberObj, BoolObj} = require('./OpObjs');
 
 const OpCode = {
-	label:		Symbol("label"),
+	label:	Symbol("label"),
 	jmp:		Symbol("jmp"),
 
 	cmp:		Symbol("cmp"),
-	test:		Symbol("test"),
+	test:	Symbol("test"),
 	
-	je:			Symbol("je"),
+	je:		Symbol("je"),
 	jne:		Symbol("jne"),
-	ja:			Symbol("ja"),
+	ja:		Symbol("ja"),
 	jae:		Symbol("jae"),
-	jb:			Symbol("jb"),
+	jb:		Symbol("jb"),
 	jbe:		Symbol("jbe"),
 
-	se:			Symbol("se"),
+	se:		Symbol("se"),
 	sne:		Symbol("sne"),
-	sa:			Symbol("sa"),
+	sa:		Symbol("sa"),
 	sae:		Symbol("sae"),
-	sb:			Symbol("sb"),
+	sb:		Symbol("sb"),
 	sbe:		Symbol("sbe"),
 
-	exit:		Symbol("exit"),
-	ceil:		Symbol("ceil"),
-	floor:		Symbol("floor"),
+	exit:	Symbol("exit"),
+	ceil:	Symbol("ceil"),
+	floor:	Symbol("floor"),
 	abs:		Symbol("abs"),
 	min:		Symbol("min"),
 	max:		Symbol("max"),
-	clamp:		Symbol("clamp"),
-	excall:		Symbol("excall"),
-	call:		Symbol("call"),
+	clamp:	Symbol("clamp"),
+	excall:	Symbol("excall"),
+	call:	Symbol("call"),
 	ret:		Symbol("ret"),
 	todouble:	Symbol("todouble"),
 	len:		Symbol("len"),
-	strcmp:		Symbol("strcmp"),
+	strcmp:	Symbol("strcmp"),
 	stricmp:	Symbol("stricmp"),
-	lcase:		Symbol("lcase"),
-	ucase:		Symbol("ucase"),
-	trim:		Symbol("trim"),
-	substr:		Symbol("substr"),
+	lcase:	Symbol("lcase"),
+	ucase:	Symbol("ucase"),
+	trim:	Symbol("trim"),
+	substr:	Symbol("substr"),
 	tostring:	Symbol("tostring"),
-	concat:		Symbol("concat"),
-	double:		Symbol("double"),
-	bool:		Symbol("bool"),
-	string:		Symbol("string"),
-	pushscope:	Symbol("pushscope"),
+	concat:	Symbol("concat"),
+	double:	Symbol("double"),
+	bool:	Symbol("bool"),
+	string:	Symbol("string"),
+	pushscope:Symbol("pushscope"),
 	popscope:	Symbol("popscope"),
-	push:		Symbol("push"),
+	push:	Symbol("push"),
 	pop:		Symbol("pop"),
 	codeline:	Symbol("codeLine"),
 	mov:		Symbol("mov"),
 	and:		Symbol("and"),
-	or:			Symbol("or"),
+	or:		Symbol("or"),
 	add:		Symbol("add"),
 	sub:		Symbol("sub"),
 	mul:		Symbol("mul"),
@@ -61,20 +61,20 @@ const OpCode = {
 	exponent:	Symbol("exponent"),
 	not:		Symbol("not"),
 	neg:		Symbol("neg"),
-	scopedepth:	Symbol("scopedepth")
+	scopedepth:Symbol("scopedepth")
 }
 
 const UnlinkedType={
 	register:		Symbol("register"),
-	double:			Symbol("double"),
-	bool:			Symbol("bool"),
-	string:			Symbol("string"),
+	double:		Symbol("double"),
+	bool:		Symbol("bool"),
+	string:		Symbol("string"),
 	doubleLiteral:	Symbol("double literal"),
 	boolLiteral:	Symbol("bool literal"),
 	stringLiteral:	Symbol("string literal"),
-	nilDouble:		Symbol("nil double"),
+	nilDouble:	Symbol("nil double"),
 	nilBool:		Symbol("nil bool"),
-	nilString:		Symbol("nil string"),
+	nilString:	Symbol("nil string"),
 }
 
 
@@ -716,57 +716,57 @@ class Program {
 	}
 
 	addRet			()					{ this.code.push( {type: OpCode.ret} ); }
-	addLabel		(id)				{ this.code.push( {type: OpCode.label,		id: id} ); }
-	addJmp			(id)				{ this.code.push( {type: OpCode.jmp,		id: id} ); }
-	addJE			(id)				{ this.code.push( {type: OpCode.je,			id: id} ); }
-	addJNE			(id)				{ this.code.push( {type: OpCode.jne,		id: id} ); }
-	addCall			(id, debugName)		{ this.code.push( {type: OpCode.call,		id: id, debugName: debugName} ); }
-	addExCall		(id, debugName)		{ this.code.push( {type: OpCode.excall,		id: id, debugName: debugName} ); }
-	addScopeDepth	(size)				{ this.code.push( {type: OpCode.scopedepth,	size: size} ); }
+	addLabel			(id)					{ this.code.push( {type: OpCode.label,		id: id} ); }
+	addJmp			(id)					{ this.code.push( {type: OpCode.jmp,		id: id} ); }
+	addJE			(id)					{ this.code.push( {type: OpCode.je,		id: id} ); }
+	addJNE			(id)					{ this.code.push( {type: OpCode.jne,		id: id} ); }
+	addScopeDepth		(size)				{ this.code.push( {type: OpCode.scopedepth,	size: size} ); }
 	addTest			(obj0)				{ this.code.push( {type: OpCode.test,		obj0: obj0} ); }
-	addSE			(obj0)				{ this.code.push( {type: OpCode.se,			obj0: obj0} ); }
+	addSE			(obj0)				{ this.code.push( {type: OpCode.se,		obj0: obj0} ); }
 	addSNE			(obj0)				{ this.code.push( {type: OpCode.sne,		obj0: obj0} ); }
-	addSA			(obj0)				{ this.code.push( {type: OpCode.sa,			obj0: obj0} ); }
+	addSA			(obj0)				{ this.code.push( {type: OpCode.sa,		obj0: obj0} ); }
 	addSAE			(obj0)				{ this.code.push( {type: OpCode.sae,		obj0: obj0} ); }
-	addSB			(obj0)				{ this.code.push( {type: OpCode.sb,			obj0: obj0} ); }
+	addSB			(obj0)				{ this.code.push( {type: OpCode.sb,		obj0: obj0} ); }
 	addSBE			(obj0)				{ this.code.push( {type: OpCode.sbe,		obj0: obj0} ); }
 	addExit			(obj0)				{ this.code.push( {type: OpCode.exit,		obj0: obj0} ); }
 	addCeil			(obj0)				{ this.code.push( {type: OpCode.ceil,		obj0: obj0} ); }
-	addFloor		(obj0)				{ this.code.push( {type: OpCode.floor,		obj0: obj0} ); }
+	addFloor			(obj0)				{ this.code.push( {type: OpCode.floor,		obj0: obj0} ); }
 	addAbs			(obj0)				{ this.code.push( {type: OpCode.abs,		obj0: obj0} ); }
 	addToDouble		(obj0)				{ this.code.push( {type: OpCode.todouble,	obj0: obj0} ); }
 	addLen			(obj0)				{ this.code.push( {type: OpCode.len,		obj0: obj0} ); }
-	addLCase		(obj0)				{ this.code.push( {type: OpCode.lcase,		obj0: obj0} ); }
-	addUCase		(obj0)				{ this.code.push( {type: OpCode.ucase,		obj0: obj0} ); }
+	addLCase			(obj0)				{ this.code.push( {type: OpCode.lcase,		obj0: obj0} ); }
+	addUCase			(obj0)				{ this.code.push( {type: OpCode.ucase,		obj0: obj0} ); }
 	addTrim			(obj0)				{ this.code.push( {type: OpCode.trim,		obj0: obj0} ); }
-	addDouble		(obj0)				{ this.code.push( {type: OpCode.double,		obj0: obj0} ); }
+	addDouble			(obj0)				{ this.code.push( {type: OpCode.double,		obj0: obj0} ); }
 	addBool			(obj0)				{ this.code.push( {type: OpCode.bool,		obj0: obj0} ); }
-	addString		(obj0)				{ this.code.push( {type: OpCode.string,		obj0: obj0} ); }
+	addString			(obj0)				{ this.code.push( {type: OpCode.string,		obj0: obj0} ); }
 	addPush			(obj0)				{ this.code.push( {type: OpCode.push,		obj0: obj0} ); }
 	addPop			(obj0)				{ this.code.push( {type: OpCode.pop,		obj0: obj0} ); }
 	addNot			(obj0)				{ this.code.push( {type: OpCode.not,		obj0: obj0} ); }
 	addNeg			(obj0)				{ this.code.push( {type: OpCode.neg,		obj0: obj0} ); }
 	addCodeLine		(code)				{ this.code.push( {type: OpCode.codeline,	code: code} ); }
 	addPopScope		(scope)				{ this.code.push( {type: OpCode.popscope,	scope: scope} ); }
-	addToString		(obj0, obj1)		{ this.code.push( {type: OpCode.tostring,	obj0: obj0, obj1: obj1} ); }
-	addCmp			(obj0, obj1)		{ this.code.push( {type: OpCode.cmp,		obj0: obj0, obj1: obj1} ); }
-	addConcat		(obj0, obj1)		{ this.code.push( {type: OpCode.concat,		obj0: obj0, obj1: obj1} ); }
-	addStrCmp		(obj0, obj1)		{ this.code.push( {type: OpCode.strcmp,		obj0: obj0, obj1: obj1} ); }
-	addStrICmp		(obj0, obj1)		{ this.code.push( {type: OpCode.stricmp,	obj0: obj0, obj1: obj1} ); }
-	addMin			(obj0, obj1)		{ this.code.push( {type: OpCode.min,		obj0: obj0, obj1: obj1} ); }
-	addMax			(obj0, obj1)		{ this.code.push( {type: OpCode.max,		obj0: obj0, obj1: obj1} ); }
-	addMov			(obj0, obj1)		{ this.code.push( {type: OpCode.mov,		obj0: obj0, obj1: obj1} ); }
-	addAnd			(obj0, obj1)		{ this.code.push( {type: OpCode.and,		obj0: obj0, obj1: obj1} ); }
-	addOr			(obj0, obj1)		{ this.code.push( {type: OpCode.or,			obj0: obj0, obj1: obj1} ); }
-	addAdd			(obj0, obj1)		{ this.code.push( {type: OpCode.add,		obj0: obj0, obj1: obj1} ); }
-	addSub			(obj0, obj1)		{ this.code.push( {type: OpCode.sub,		obj0: obj0, obj1: obj1} ); }
-	addMul			(obj0, obj1)		{ this.code.push( {type: OpCode.mul,		obj0: obj0, obj1: obj1} ); }
-	addDiv			(obj0, obj1)		{ this.code.push( {type: OpCode.div,		obj0: obj0, obj1: obj1} ); }
-	addMod			(obj0, obj1)		{ this.code.push( {type: OpCode.mod,		obj0: obj0, obj1: obj1} ); }
-	addExponent		(obj0, obj1)		{ this.code.push( {type: OpCode.exponent,	obj0: obj0, obj1: obj1} ); }
-	addPushScope	(scope, size)		{ this.code.push( {type: OpCode.pushscope,	scope: scope, size: size} ); }
-	addSubStr		(obj0, obj1, obj2)	{ this.code.push( {type: OpCode.substr,		obj0: obj0, obj1: obj1, obj2: obj2} ); }
-	addClamp		(obj0, obj1, obj2)	{ this.code.push( {type: OpCode.clamp,		obj0: obj0, obj1: obj1, obj2: obj2} ); }
+	addToString		(obj0, obj1)			{ this.code.push( {type: OpCode.tostring,	obj0: obj0, obj1: obj1} ); }
+	addCmp			(obj0, obj1)			{ this.code.push( {type: OpCode.cmp,		obj0: obj0, obj1: obj1} ); }
+	addConcat			(obj0, obj1)			{ this.code.push( {type: OpCode.concat,		obj0: obj0, obj1: obj1} ); }
+	addStrCmp			(obj0, obj1)			{ this.code.push( {type: OpCode.strcmp,		obj0: obj0, obj1: obj1} ); }
+	addStrICmp		(obj0, obj1)			{ this.code.push( {type: OpCode.stricmp,	obj0: obj0, obj1: obj1} ); }
+	addMin			(obj0, obj1)			{ this.code.push( {type: OpCode.min,		obj0: obj0, obj1: obj1} ); }
+	addMax			(obj0, obj1)			{ this.code.push( {type: OpCode.max,		obj0: obj0, obj1: obj1} ); }
+	addMov			(obj0, obj1)			{ this.code.push( {type: OpCode.mov,		obj0: obj0, obj1: obj1} ); }
+	addAnd			(obj0, obj1)			{ this.code.push( {type: OpCode.and,		obj0: obj0, obj1: obj1} ); }
+	addOr			(obj0, obj1)			{ this.code.push( {type: OpCode.or,		obj0: obj0, obj1: obj1} ); }
+	addAdd			(obj0, obj1)			{ this.code.push( {type: OpCode.add,		obj0: obj0, obj1: obj1} ); }
+	addSub			(obj0, obj1)			{ this.code.push( {type: OpCode.sub,		obj0: obj0, obj1: obj1} ); }
+	addMul			(obj0, obj1)			{ this.code.push( {type: OpCode.mul,		obj0: obj0, obj1: obj1} ); }
+	addDiv			(obj0, obj1)			{ this.code.push( {type: OpCode.div,		obj0: obj0, obj1: obj1} ); }
+	addMod			(obj0, obj1)			{ this.code.push( {type: OpCode.mod,		obj0: obj0, obj1: obj1} ); }
+	addExponent		(obj0, obj1)			{ this.code.push( {type: OpCode.exponent,	obj0: obj0, obj1: obj1} ); }
+	addPushScope		(scope, size)			{ this.code.push( {type: OpCode.pushscope,	scope: scope, size: size} ); }
+	addCall			(id, debugName)		{ this.code.push( {type: OpCode.call,		id: id, debugName: debugName} ); }
+	addExCall			(id, debugName)		{ this.code.push( {type: OpCode.excall,		id: id, debugName: debugName} ); }
+	addSubStr			(obj0, obj1, obj2)		{ this.code.push( {type: OpCode.substr,		obj0: obj0, obj1: obj1, obj2: obj2} ); }
+	addClamp			(obj0, obj1, obj2)		{ this.code.push( {type: OpCode.clamp,		obj0: obj0, obj1: obj1, obj2: obj2} ); }
 
 
 
