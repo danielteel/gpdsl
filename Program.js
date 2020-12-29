@@ -319,9 +319,9 @@ class Program {
 		this.codeState=Program.CodeState.OPTIMIZED;
 	}
 
-	link(){
+	link(optimize){
 		if (this.codeState===Program.CodeState.READY) return null;
-		if (this.codeState===Program.CodeState.BUILDING){
+		if (this.codeState===Program.CodeState.BUILDING && optimize){
 			this.optimize();
 			if (this.codeState!==Program.CodeState.OPTIMIZED) return Utils.newErrorObj("error optimizing.");
 		}
@@ -395,16 +395,15 @@ class Program {
 	}
 
 
-	executionError(opcode, message){
-		return Utils.newErrorObj(this.debugCodeLine, message);
+	executionError(eip, message){
+		return Utils.newErrorObj(eip, message);
 	}
 
 	execute(externals){
 		const link = (obj) => this.linkedObject(obj, scopes);
 
 		if (this.codeState!==Program.CodeState.READY){
-			let linkError = this.link();
-			if (linkError) return linkError;
+			return this.executionError(null, "tried executing on unlinked code")
 		}
 		this.debugCodeLine=1;
 
@@ -432,7 +431,7 @@ class Program {
 						break;
 
 					case OpCode.excall:
-						if ( (errMsg=this.eax.setTo(externals[opcode.id]( () => stack.pop() ))) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=this.eax.setTo(externals[opcode.id]( () => stack.pop() ))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.call:
 						callStack.push(eip+1);
@@ -497,110 +496,110 @@ class Program {
 						break;
 
 					case OpCode.se:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_e?this.true:this.false)) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=link(opcode.obj0).setTo(flag_e?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.sne:
-						if ( (errMsg=link(opcode.obj0).setTo(!flag_e?this.true:this.false)) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=link(opcode.obj0).setTo(!flag_e?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.sa:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_a?this.true:this.false)) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=link(opcode.obj0).setTo(flag_a?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.sae:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_a||flag_e?this.true:this.false)) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=link(opcode.obj0).setTo(flag_a||flag_e?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.sb:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_b?this.true:this.false)) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=link(opcode.obj0).setTo(flag_b?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.sbe:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_b||flag_e?this.true:this.false)) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=link(opcode.obj0).setTo(flag_b||flag_e?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
 						break;
 						
 					case OpCode.ceil:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to do ceil on null value");	
-						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.ceil(obj0.value), true))) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to do ceil on null value");	
+						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.ceil(obj0.value), true))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.floor:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to do floor on null value");
-						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.floor(obj0.value), true))) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to do floor on null value");
+						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.floor(obj0.value), true))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.abs:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to do abs on null value");	
-						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.abs(obj0.value), true))) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to do abs on null value");	
+						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.abs(obj0.value), true))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.min:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) return this.executionError(opcode, "tried to do min on null value");	
-						if (obj1.value===null) return this.executionError(opcode, "tried to do min on null value");	
-						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.min(obj0.value, obj1.value), true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to do min on null value");	
+						if (obj1.value===null) return this.executionError(eip, "tried to do min on null value");	
+						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.min(obj0.value, obj1.value), true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.max:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) return this.executionError(opcode, "tried to do max on null value");	
-						if (obj1.value===null) return this.executionError(opcode, "tried to do max on null value");	
-						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.max(obj0.value, obj1.value), true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to do max on null value");	
+						if (obj1.value===null) return this.executionError(eip, "tried to do max on null value");	
+						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.max(obj0.value, obj1.value), true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.clamp:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
 						obj2 = link(opcode.obj2);
-						if (obj0.value===null) return this.executionError(opcode, "tried to do clamp on null value");	
-						if (obj1.value===null) return this.executionError(opcode, "tried to do clamp on null value");	
-						if (obj2.value===null) return this.executionError(opcode, "tried to do clamp on null value");	
-						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.min(Math.max(obj0.value, obj1.value), obj2.value), true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to do clamp on null value");	
+						if (obj1.value===null) return this.executionError(eip, "tried to do clamp on null value");	
+						if (obj2.value===null) return this.executionError(eip, "tried to do clamp on null value");	
+						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.min(Math.max(obj0.value, obj1.value), obj2.value), true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.todouble:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to convert null to double");	
-						if ( (errMsg=obj0.setTo(new NumberObj(null, Number(obj0.value), true))) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to convert null to double");	
+						if ( (errMsg=obj0.setTo(new NumberObj(null, Number(obj0.value), true))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.len:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to get length of null string");
-						if ( (errMsg=obj0.setTo(new NumberObj(null, obj0.value.length, true))) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to get length of null string");
+						if ( (errMsg=obj0.setTo(new NumberObj(null, obj0.value.length, true))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.strcmp:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if ( (errMsg=obj0.setTo(new BoolObj(null, obj0.value===obj1.value, true))) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=obj0.setTo(new BoolObj(null, obj0.value===obj1.value, true))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.stricmp:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if ( (errMsg=obj0.setTo(new BoolObj(null, obj0.value.toLowerCase()===obj1.value.toLowerCase(), true))) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=obj0.setTo(new BoolObj(null, obj0.value.toLowerCase()===obj1.value.toLowerCase(), true))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.lcase:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to set null string to lower case");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.toLowerCase(), true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to set null string to lower case");
+						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.toLowerCase(), true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.ucase:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to set null string to upper case");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.toUpperCase(), true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to set null string to upper case");
+						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.toUpperCase(), true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.trim:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to trim null string");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.trim(), true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to trim null string");
+						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.trim(), true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.substr:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
 						obj2 = link(opcode.obj2);
-						if (obj0.value===null) return this.executionError(opcode, "tried to get substring of null string");
-						if (obj1.value===null) return this.executionError(opcode, "tried to get substring with null index");
-						if (obj2.value===null) return this.executionError(opcode, "tried to get substring with null length");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.substr(obj1.value, obj2.value), true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to get substring of null string");
+						if (obj1.value===null) return this.executionError(eip, "tried to get substring with null index");
+						if (obj2.value===null) return this.executionError(eip, "tried to get substring with null length");
+						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.substr(obj1.value, obj2.value), true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.tostring:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) return this.executionError(opcode, "tried to convert null to string");
+						if (obj0.value===null) return this.executionError(eip, "tried to convert null to string");
 						let val=obj0.value;
 						if (obj1.value!==null){
 							if (obj1.value>=0) val=Number(val).toFixed(obj1.value);
@@ -611,14 +610,14 @@ class Program {
 						}else{
 							val=String(val);
 						}
-						if ( (errMsg=obj0.setTo( new StringObj(null, val, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=obj0.setTo( new StringObj(null, val, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.concat:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) return this.executionError(opcode, "tried to concat null to string");
-						if (obj1.value===null) return this.executionError(opcode, "tried to concat string to null");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value+obj1.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to concat null to string");
+						if (obj1.value===null) return this.executionError(eip, "tried to concat string to null");
+						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value+obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.double:
 						scopes[opcode.obj0.scope][scopes[opcode.obj0.scope].length-1][opcode.obj0.index]=new NumberObj(null, null, false);
@@ -639,7 +638,7 @@ class Program {
 						stack.push(link(opcode.obj0).getCopy());
 						break;
 					case OpCode.pop:
-						if ( (errMsg=link(opcode.obj0).setTo(stack.pop())) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=link(opcode.obj0).setTo(stack.pop())) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.codeline:
 						//essentially a nop
@@ -649,59 +648,59 @@ class Program {
 						}
 						break;
 					case OpCode.mov:
-						if ( (errMsg=link(opcode.obj0).setTo(link(opcode.obj1))) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=link(opcode.obj0).setTo(link(opcode.obj1))) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.and:
 						obj0=link(opcode.obj0);
-						if ( (errMsg=obj0.setTo( new BoolObj(null, obj0.value && link(opcode.obj1).value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=obj0.setTo( new BoolObj(null, obj0.value && link(opcode.obj1).value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.or:
 						obj0=link(opcode.obj0);
-						if ( (errMsg=obj0.setTo( new BoolObj(null, obj0.value || link(opcode.obj1).value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=obj0.setTo( new BoolObj(null, obj0.value || link(opcode.obj1).value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.add:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(opcode, "tried to add null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value + obj1.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to add null");
+						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value + obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.sub:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(opcode, "tried to sub null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value - obj1.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to sub null");
+						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value - obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.mul:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value * obj1.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value * obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.div:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(opcode, "tried to div null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value / obj1.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to div null");
+						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value / obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.mod:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(opcode, "tried to mod null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value % obj1.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to mod null");
+						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value % obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.exponent:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(opcode, "tried to ^ null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value ** obj1.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to ^ null");
+						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value ** obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.not:
 						obj0=link(opcode.obj0);
-						if ( (errMsg=obj0.setTo( new BoolObj(null, !obj0.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if ( (errMsg=obj0.setTo( new BoolObj(null, !obj0.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.neg:
 						obj0=link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(opcode, "tried to neg null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, 0-obj0.value, true) )) !==null ) return this.executionError(opcode, errMsg);
+						if (obj0.value===null) return this.executionError(eip, "tried to neg null");
+						if ( (errMsg=obj0.setTo( new NumberObj(null, 0-obj0.value, true) )) !==null ) return this.executionError(eip, errMsg);
 						break;
 					case OpCode.scopedepth:
 						for (let i=0;i<opcode.size;i++){
@@ -712,7 +711,7 @@ class Program {
 				eip++;
 			}
 
-		return new BoolObj(null, null, true);
+		return new BoolObj(null, true, true);
 	}
 
 	addRet			()					{ this.code.push( {type: OpCode.ret} ); }
@@ -775,17 +774,17 @@ class Program {
 	linkToEnglish(obj){
 		switch (obj.type){
 			case UnlinkedType.register:
-				return "\x1b[35m "+obj.debugName;
+				return " "+obj.debugName;
 			case UnlinkedType.double:
 			case UnlinkedType.bool:
 			case UnlinkedType.string:
-				return "\x1b[35m _"+obj.debugName;
+				return " _"+obj.debugName;
 
 			case UnlinkedType.doubleLiteral:
 				case UnlinkedType.boolLiteral:
-				return "\x1b[35m"+obj.value.toString();
+				return obj.value.toString();
 			case UnlinkedType.stringLiteral:
-				return '\x1b[35m"'+obj.value+'"';
+				return '"'+obj.value+'"';
 
 			case UnlinkedType.nilDouble:
 			case UnlinkedType.nilBool:
@@ -795,198 +794,200 @@ class Program {
 		return null;										
 	}
 
-	printDebugView(onlyPrintOpCodes=false){
+	getDebugOutput(onlyPrintOpCodes=false){
 		let codeLine=0;
+		let output=String("DISASSEMBLED VIEW - Length: "+this.code.reduce((prev, cur)=>(prev+(cur.type!==OpCode.codeline && cur.type!==OpCode.label)),0))+"\n";
 		let asm="";
-		console.log("\x1b[0m\x1b[37mDISASSEMBLED VIEW - Length: "+this.code.reduce((prev, cur)=>(prev+(cur.type!==OpCode.codeline && cur.type!==OpCode.label)),0))
 		for (let eip=0;eip<this.code.length;eip++){
 			let opcode=this.code[eip];
-			if (this.codeState===Program.CodeState.READY) asm+="\x1b[34m"+eip;
+			asm+=String(eip)+"\t\t";
 			switch (opcode.type){
 				case OpCode.label:
-					asm+="\t\x1b[36m"+opcode.id+":\n";
+					asm+=String(opcode.id)+":";
 					break;
 				case OpCode.jmp:
-					asm+="\t\x1b[33mjmp \x1b[36m"+opcode.id+"\n";
+					asm+="jmp "+opcode.id;
 					break;
 
 				case OpCode.je:
-					asm+="\t\x1b[33mje \x1b[36m"+opcode.id+"\n";
+					asm+="je "+opcode.id;
 					break;
 				case OpCode.jne:
-					asm+="\t\x1b[33mjne \x1b[36m"+opcode.id+"\n";
+					asm+="jne "+opcode.id;
 					break;
 				case OpCode.ja:
-					asm+="\t\x1b[33mja \x1b[36m"+opcode.id+"\n";
+					asm+="ja "+opcode.id;
 					break;
 				case OpCode.jae:
-					asm+="\t\x1b[33mjae \x1b[36m"+opcode.id+"\n";
+					asm+="jae "+opcode.id;
 					break;
 				case OpCode.jb:
-					asm+="\t\x1b[33mjb \x1b[36m"+opcode.id+"\n";
+					asm+="jb "+opcode.id;
 					break;
 				case OpCode.jbe:
-					asm+="\t\x1b[33mjbe \x1b[36m"+opcode.id+"\n";
+					asm+="jbe "+opcode.id;
 					break;
 
 				case OpCode.test:
-					asm+="\t\x1b[33mtest "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="test "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.cmp:
-					asm+="\t\x1b[33mcmp "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="cmp "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.se:
-					asm+="\t\x1b[33mse "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="se "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.sne:
-					asm+="\t\x1b[33msne "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="sne "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.sa:
-					asm+="\t\x1b[33msa "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="sa "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.sae:
-					asm+="\t\x1b[33msae "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="sae "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.sb:
-					asm+="\t\x1b[33msb "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="sb "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.sbe:
-					asm+="\t\x1b[33msbe "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="sbe "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.exit:
-					asm+="\t\x1b[33mexit "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="exit "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.ceil:
-					asm+="\t\x1b[33mceil "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="ceil "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.floor:
-					asm+="\t\x1b[33mfloor "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="floor "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.abs:
-					asm+="\t\x1b[33mabs "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="abs "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.min:
-					asm+="\t\x1b[33mmin "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="min "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.max:
-					asm+="\t\x1b[33mmax "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="max "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.clamp:
-					asm+="\t\x1b[33mclamp "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\x1b[33m, "+this.linkToEnglish(opcode.obj2)+"\n";
+					asm+="clamp "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1)+", "+this.linkToEnglish(opcode.obj2);
 					break;
 				case OpCode.excall:
-					asm+="\t\x1b[33mexcall \x1b[36m"+opcode.id+"\x1b[33m; \x1b[36m"+opcode.debugName+"\n";
+					asm+="excall "+opcode.id+"; "+opcode.debugName;
 					break;
 				case OpCode.call:
-					asm+="\t\x1b[33mcall \x1b[36m"+opcode.id+"\x1b[33m; \x1b[36m"+opcode.debugName+"\n";
+					asm+="call "+opcode.id+"; "+opcode.debugName;
 					break;
 				case OpCode.ret:
-					asm+="\t\x1b[33mret\n";
+					asm+="ret";
 					break;
 				case OpCode.todouble:
-					asm+="\t\x1b[33mtodouble "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="todouble "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.len:
-					asm+="\t\x1b[33mlen "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="len "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.strcmp:
-					asm+="\t\x1b[33mstrcmp "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="strcmp "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.stricmp:
-					asm+="\t\x1b[33mstricmp "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="stricmp "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.lcase:
-					asm+="\t\x1b[33mlcase "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="lcase "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.ucase:
-					asm+="\t\x1b[33mucase "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="ucase "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.trim:
-					asm+="\t\x1b[33mtrim "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="trim "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.substr:
-					asm+="\t\x1b[33msubstr "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\x1b[33m, "+this.linkToEnglish(opcode.obj2)+"\n";
+					asm+="substr "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1)+", "+this.linkToEnglish(opcode.obj2);
 					break;
 				case OpCode.tostring:
-					asm+="\t\x1b[33mtostring "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="tostring "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.concat:
-					asm+="\t\x1b[33mconcat "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="concat "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.pushscope:
-					asm+="\t\x1b[33mpushscope "+opcode.scope+", "+opcode.size+"\n";
+					asm+="pushscope "+opcode.scope+", "+opcode.size;
 					break;
 				case OpCode.popscope:
-					asm+="\t\x1b[33mpopscope "+opcode.scope+"\n";
+					asm+="popscope "+opcode.scope;
 					break;
 				case OpCode.push:
-					asm+="\t\x1b[33mpush "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="push "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.pop:
-					asm+="\t\x1b[33mpop "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="pop "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.codeline:
 					if (onlyPrintOpCodes) break;
-
+					
+					asm+="cl";
 					if (opcode.code!==null){
 						codeLine++;
-						console.log("\x1b[32m"+codeLine+") \x1b[37m"+opcode.code.trim());
+						output+="\n-"+String(codeLine)+"-\t"+opcode.code.trim();
 					}
-					if (asm!=="") console.log("\x1b[33m"+asm.trimEnd());
+					if (asm!=="") output+=asm.trimEnd();
 					asm="";
 					break;
 				case OpCode.mov:
-					asm+="\t\x1b[33mmov "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="mov "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.and:
-					asm+="\t\x1b[33mand "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="and "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.or:
-					asm+="\t\x1b[33mor "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="or "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.add:
-					asm+="\t\x1b[33madd "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="add "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.sub:
-					asm+="\t\x1b[33msub "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="sub "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.mul:
-					asm+="\t\x1b[33mmul "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="mul "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.div:
-					asm+="\t\x1b[33mdiv "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="div "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.mod:
-					asm+="\t\x1b[33mmod "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="mod "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.exponent:
-					asm+="\t\x1b[33mexp "+this.linkToEnglish(opcode.obj0)+"\x1b[33m, "+this.linkToEnglish(opcode.obj1)+"\n";
+					asm+="exp "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.not:
-					asm+="\t\x1b[33mnot "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="not "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.neg:
-					asm+="\t\x1b[33mneg "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="neg "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.scopedepth:
-					asm+="\t\x1b[33mscopedepth "+opcode.size+"\n";
+					asm+="scopedepth "+opcode.size;
 					break;
 				case OpCode.double:
-					asm+="\t\x1b[33mdouble "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="double "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.bool:
-					asm+="\t\x1b[33mbool "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="bool "+this.linkToEnglish(opcode.obj0);
 					break;
 				case OpCode.string:
-					asm+="\t\x1b[33mstring "+this.linkToEnglish(opcode.obj0)+"\n";
+					asm+="string "+this.linkToEnglish(opcode.obj0);
 					break;
 				default:
-					asm+="\t\x1b[31mUNKNOWN INSTRUCTION\n";
+					asm+="UNKNOWN INSTRUCTION\n";
 			}
+			asm+="\n";
 		}
-		console.log(asm);
-		
-		console.log("\x1b[0m\x1b[37mEND DISASSEMBLED VIEW\x1b[0m\n")
+		output+=asm;
+		output+="END DISASSEMBLED VIEW";
+		return output;
 	}
 
 }

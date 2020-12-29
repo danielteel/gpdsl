@@ -1,4 +1,8 @@
-let code = `double reverseInteger(double number) { 
+const {Interpreter, StringObj, NumberObj, BoolObj} = require('./Interpreter');
+
+
+let code = `
+double reverseInteger(double number) { 
 		double newNumber=0;
 		while (number!=0){
 				newNumber=newNumber*10+number%10;
@@ -11,16 +15,11 @@ let code = `double reverseInteger(double number) {
 		return newNumber;
 }
 
-for (double i=0;i<=100000;i=i+1){
-	 reverseInteger(i);
-}
-print(tostring(reverseInteger(123456789), null));
+exit reverseInteger(this);
 `;
 
 
-const {Interpreter, StringObj, NumberObj, BoolObj} = require('./Interpreter');
-
-function print(popFn){
+const print = (popFn) => {
 		let str=popFn();
 
 		console.log(str.value);
@@ -28,8 +27,14 @@ function print(popFn){
 }
 
 let interpreter=new Interpreter();
+let thisObj = new NumberObj("this", 123456789, true);
+let imports = [thisObj, Interpreter.funcDef("print", print, "bool", "string")];
 
-interpreter.runCode( 
-										code,                                                   //The code to run
-										Interpreter.funcDef("print", print, "bool", "string"),  //importing print (returns a bool, accepts a string)
-									 );
+let retObj = interpreter.runCode( code, false, ...imports );
+
+if (retObj.error){
+	console.log("ERROR @ "+retObj.error.line+": "+retObj.error.message)
+}else{
+	console.log(retObj.return.objType, retObj.return.value);
+}
+ 

@@ -52,13 +52,13 @@ class Interpreter {
 		return builtDef;
 	}
 
-	runCode(code, ...externals){
+	runCode(code, optimize, ...externals){
 		let tokenizer=new Tokenizer(code);
 		let errorRecvd=tokenizer.tokenize();
 
 		if (errorRecvd!==null){
-			console.log("Error during tokenization on line: "+errorRecvd.line+" "+errorRecvd.message);
-			return errorRecvd;
+			errorRecvd.message="Tokenizer: "+errorRecvd.message;
+			return {error: errorRecvd};
 		}
 
 		const parserExternList=[];
@@ -82,38 +82,33 @@ class Interpreter {
 		}
 
 		let parser=new Parser(tokenizer.tokens);
-		const program=parser.parse(parserExternList);//[ {name: "ret", type: IdentityType.String}, {name: "print", type: IdentityType.BoolFunction, params:[IdentityType.String]} ]);
+		const program=parser.parse(parserExternList);
 		if (!(program instanceof Program)){
 			errorRecvd = program;
-			console.log("Error during parse on line: "+errorRecvd.line+" "+errorRecvd.message);
-			return errorRecvd;
+			errorRecvd.message="Parser: "+errorRecvd.message;
+			return {error: errorRecvd};
 		}
 
-		program.printDebugView(true);
 
-		errorRecvd=program.link();
+		errorRecvd=program.link(optimize);
 		if (errorRecvd){
-			console.log("Error during link: "+errorRecvd.line+" "+errorRecvd.message);
-			return errorRecvd;
+			errorRecvd.message="Linker: "+errorRecvd.message;
+			return {error: errorRecvd};
 		}
 
-		program.printDebugView(true);
+		const disassembled = program.getDebugOutput();
 
-		const startTime = new Date().getTime();
+
 		let exitObject=program.execute(executeExternList);
-		const endTime = new Date().getTime();
 
 		if (!(exitObject instanceof OpObj)){
 			errorRecvd=exitObject;
-			console.log("Error during execution on line: "+errorRecvd.line+" "+errorRecvd.message);
-			return errorRecvd;
+			errorRecvd.message="Runtime: "+errorRecvd.message;
+			return {error: errorRecvd};
 		}
 		
-		console.log("Exit value:"+exitObject.value);
-		console.log("Execution time: "+(endTime-startTime));
-		return exitObject;
+		return {return: exitObject, disassembled: disassembled};
 	}
 }
 
 module.exports={Interpreter, StringObj, NumberObj, BoolObj};
-

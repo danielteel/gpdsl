@@ -121,7 +121,7 @@ class Parser {
 		}
 		this.program.addCodeLine(null);
 		
-		this.program.addExit( Program.unlinkedNilString() );
+		this.program.addExit( Program.unlinkedNilBool() );
 		this.program.addLabel(pushGlobalScopeBranch);
 
 		this.program.addScopeDepth(this.maxScopeDepth);
@@ -1409,7 +1409,7 @@ class Parser {
 
 		let hasCurlys = false;
 
-		if (!ifNeedsCurlys && !this.isNotEnd()) return true;//End of the program, and we're not expecting a closing }
+		if (!ifNeedsCurlys && !this.isNotEnd()) return true;//End of the program, and we're not expecting a closing '}'
 
 		if (ifNeedsCurlys || this.token?.type===TokenType.LeftCurly){
 			if (!this.match(TokenType.LeftCurly)) return false;
