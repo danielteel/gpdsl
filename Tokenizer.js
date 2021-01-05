@@ -1,9 +1,11 @@
-const Utils = require("./Utils");
+const {Utils} = require("./Utils");
 
 const TokenType = {
 	LineDelim: Symbol(";"),
 	NewLine: Symbol("newline"),
 
+	Forward: Symbol("forward"),
+	Void: Symbol("void"),
 	Double: Symbol("double"),
 	String: Symbol("string"),
 	Bool: Symbol("bool"),
@@ -16,7 +18,7 @@ const TokenType = {
 
 	True: Symbol("true"),
 	False: Symbol("false"),
-	Nil: Symbol("nil"),
+	Null: Symbol("null"),
 
 	LeftParen: Symbol("("),
 	RightParen: Symbol(")"),
@@ -24,6 +26,7 @@ const TokenType = {
 	RightSqaure: Symbol("]"),
 
 	Comma: Symbol(","),
+	Dot: Symbol("."),
 
 	Not: Symbol("!"),
 	And: Symbol("&&"),
@@ -57,13 +60,7 @@ const TokenType = {
 	UCase: Symbol("ucase"),
 	Trim: Symbol("trim"),
 	Len: Symbol("len"),
-	StrCmp: Symbol("strcmp"),
-	StrICmp: Symbol("stricmp"),
 	SubStr: Symbol("substr"),
-
-
-	ToDouble: Symbol("todouble"),
-	ToString: Symbol("tostring"),
 
 	While: Symbol("while"),
 	For: Symbol("for"),
@@ -79,6 +76,31 @@ const TokenType = {
 };
 
 
+function isDigit(character){
+	const charCode=character.charCodeAt(0);
+	if (charCode>=48 && charCode<=57){
+		return true;
+	}
+	return false;
+}
+
+function isAlpha(character){
+	const charCode=character.charCodeAt(0);
+	if ((charCode>=65 && charCode<=90) || (charCode>=97 && charCode<=122)){
+		return true;
+	}
+	return false;
+}
+
+function isAlNum(character){
+	return Utils.isAlpha(character) || Utils.isDigit(character);
+}
+ 
+function isSpace(character){
+	if (character.charCodeAt(0)<=32) return true;
+	return false;
+}
+
 class Tokenizer {
 	static newTokenObj(type, value, line) {
 		return {type: type, value: value, line: line};
@@ -86,10 +108,6 @@ class Tokenizer {
 
 	static get TokenType(){
 		return TokenType;
-	}
-
-	constructor(code) {
-		this.setCode(code);
 	}
 
 	setCode(code) {
@@ -106,26 +124,24 @@ class Tokenizer {
 		this.currentLineText=this.look;
 	}
 
-	tokenize() {
-		this.setCode(this.code);
+	tokenize(code) {
+		this.setCode(code);
 
 		while (this.isNotEnd()) {
-			if (!this.next()) break;
+			this.next();
 		}
 	
 		this.addToken(TokenType.NewLine, this.currentLineText?.trim());
 
-		return this.errorObj;
+		return this.tokens;
 	}
 
-	setError(message) {
-		this.errorObj = Utils.newErrorObj(this.currentCodeLine, message);
-		return false;
+	throwError(message) {
+		throw Error("Tokenizer error on line "+this.currentCodeLine+": "+message);
 	}
 
 	addToken(type, value = null) {
 		this.tokens.push(Tokenizer.newTokenObj(type, value, this.currentCodeLine));
-		return true;
 	}
 
 	isNotEnd() {
@@ -142,7 +158,7 @@ class Tokenizer {
 	}
 
 	skipWhite() {
-		while (this.isNotEnd() && Utils.isSpace(this.look)) {
+		while (this.isNotEnd() && isSpace(this.look)) {
 			if (this.look === '\n') {
 				this.currentCodeLine++;
 				this.addToken(TokenType.NewLine, this.currentLineText.trimEnd());
@@ -156,26 +172,34 @@ class Tokenizer {
 		let hasDec = false;
 		let notDone = true;
 		let num = "";
-		while (this.isNotEnd() && notDone === true) {
+
+		while (this.isNotEnd() && notDone) {
 			notDone = false;
-			if (Utils.isDigit(this.look)) {
+			if (isDigit(this.look)) {
 				num += this.look;
 				notDone = true;
 			}
-			if (this.look === '.' && hasDec === false) {
+			if (this.look === '.' && !hasDec) {
 				num += this.look;
 				hasDec = true;
 				notDone = true;
 			}
-			if (notDone === true) this.getChar();
+			if (notDone) this.getChar();
 		}
 
-		if (num.length < 2 && hasDec === true) return this.setError("Expected number but found lone decimal.");
-		
-		return this.addToken(TokenType.DoubleLiteral, Number(num));
+		if (num.length===1 && hasDec){
+			this.addToken(TokenType.Dot);
+
+		} else if (num.length>0){
+			this.addToken(TokenType.DoubleLiteral, Number(num));
+
+		}else{
+			this.throwError("expected number but found '"+this.look+"'");
+		}
 	}
 
-	stringLiteral(stringTerminator) {
+	stringLiteral() {
+		let stringTerminator=this.look;
 		let str = "";
 		this.getChar();
 		while (this.isNotEnd() && this.look !== stringTerminator) {
@@ -183,10 +207,10 @@ class Tokenizer {
 			this.getChar();
 		}
 		if (this.isNotEnd()) {
-			if (this.look !== stringTerminator) return this.setError("Expected string but found end of code.");
+			if (this.look !== stringTerminator) this.throwError("expected string but found end of code.");
 		}
 		this.getChar();
-		return this.addToken(TokenType.StringLiteral, str);
+		this.addToken(TokenType.StringLiteral, str);
 	}
 
 	ident() {
@@ -195,191 +219,247 @@ class Tokenizer {
 
 		while (this.isNotEnd() && notDone === true) {
 			notDone = false;
-			if (Utils.isAlpha(this.look) || Utils.isDigit(this.look) || this.look === '_' || this.look === '.') {
+			if (isAlpha(this.look) || isDigit(this.look) || this.look === '_' || this.look === '.') {
 				name += this.look;
 				notDone = true;
 				this.getChar();
 			}
 		}
 
-		if (name.length === 0) return this.setError("Expected identifier but got nothing");
+		if (name.length === 0) this.throwError("expected identifier but got nothing");
 		
-
 		switch (name) {
 			case "if":
-				return this.addToken(TokenType.If);
+				this.addToken(TokenType.If);
+				break;
 			case "while":
-				return this.addToken(TokenType.While);
+				this.addToken(TokenType.While);
+				break;
 			case "for":
-				return this.addToken(TokenType.For);
+				this.addToken(TokenType.For);
+				break;
 			case "loop":
-				return this.addToken(TokenType.Loop);
+				this.addToken(TokenType.Loop);
+				break;
 			case "else":
-				return this.addToken(TokenType.Else);
+				this.addToken(TokenType.Else);
+				break;
 			case "break":
-				return this.addToken(TokenType.Break);
+				this.addToken(TokenType.Break);
+				break;
 
 			case "return":
-				return this.addToken(TokenType.Return);
+				this.addToken(TokenType.Return);
+				break;
 
 			case "exit":
-				return this.addToken(TokenType.Exit);
+				this.addToken(TokenType.Exit);
+				break;
 
 			case "floor":
-				return this.addToken(TokenType.Floor);
+				this.addToken(TokenType.Floor);
+				break;
 			case "ceil":
-				return this.addToken(TokenType.Ceil);
+				this.addToken(TokenType.Ceil);
+				break;
 			case "min":
-				return this.addToken(TokenType.Min);
+				this.addToken(TokenType.Min);
+				break;
 			case "max":
-				return this.addToken(TokenType.Max);
+				this.addToken(TokenType.Max);
+				break;
 			case "clamp":
-				return this.addToken(TokenType.Clamp);
+				this.addToken(TokenType.Clamp);
+				break;
 			case "abs":
-				return this.addToken(TokenType.Abs);
+				this.addToken(TokenType.Abs);
+				break;
 
 			case "lcase":
-				return this.addToken(TokenType.LCase)
+				this.addToken(TokenType.LCase);
+				break;
 			case "ucase":
-				return this.addToken(TokenType.UCase)
+				this.addToken(TokenType.UCase);
+				break;
 			case "trim":
-				return this.addToken(TokenType.Trim)
+				this.addToken(TokenType.Trim);
+				break;
 			case "len":
-				return this.addToken(TokenType.Len)
-			case "strcmp":
-				return this.addToken(TokenType.StrCmp)
-			case "stricmp":
-				return this.addToken(TokenType.StrICmp)
+				this.addToken(TokenType.Len);
+				break;
 			case "substr":
-				return this.addToken(TokenType.SubStr)
+				this.addToken(TokenType.SubStr);
+				break;
 
-			case "todouble":
-				return this.addToken(TokenType.ToDouble);
-			case "tostring":
-				return this.addToken(TokenType.ToString);
-
+			case "forward":
+				this.addToken(TokenType.Forward);
+				break;
+			case "void":
+				this.addToken(TokenType.Void);
+				break;
 			case "double":
-				return this.addToken(TokenType.Double);
+				this.addToken(TokenType.Double);
+				break;
 			case "string":
-				return this.addToken(TokenType.String);
+				this.addToken(TokenType.String);
+				break;
 			case "bool":
-				return this.addToken(TokenType.Bool);
+				this.addToken(TokenType.Bool);
+				break;
 
 			case "true":
-				return this.addToken(TokenType.True);
+				this.addToken(TokenType.True);
+				break;
 			case "false":
-				return this.addToken(TokenType.False);
+				this.addToken(TokenType.False);
+				break;
 				
-			case "nil":
 			case "null":
-				return this.addToken(TokenType.Nil);
+				this.addToken(TokenType.Null);
+				break;
+
+			default:
+				return this.addToken(TokenType.Ident, name);
 		}
-		return this.addToken(TokenType.Ident, name);
 	}
 
 
 	next() {
 		this.skipWhite();
 		if (this.isNotEnd()) {
-			if (Utils.isDigit(this.look) || this.look === '.') {
-				return this.doubleLiteral();
-			} else if (Utils.isAlpha(this.look) || this.look === '_') {
-				return this.ident();
+
+			if (isDigit(this.look) || this.look === '.') {
+				this.doubleLiteral();
+
+			} else if (isAlpha(this.look) || this.look === '_') {
+				this.ident();
+
 			} else if (this.look === '"' || this.look === "'") {
-				return this.stringLiteral(this.look);
+				this.stringLiteral();
+
 			} else {
 				let symbol = this.look;
 				this.getChar();
 				switch (symbol) {
 					case ';':
-						return this.addToken(TokenType.LineDelim);
+						this.addToken(TokenType.LineDelim);
+						break;
 					case ',':
-						return this.addToken(TokenType.Comma);
+						this.addToken(TokenType.Comma);
+						break;
 
 					case '?':
-						return this.addToken(TokenType.Question);
+						this.addToken(TokenType.Question);
+						break;
 					case ':':
-						return this.addToken(TokenType.Colon);
+						this.addToken(TokenType.Colon);
+						break;
 
 					case '{':
-						return this.addToken(TokenType.LeftCurly);
+						this.addToken(TokenType.LeftCurly);
+						break;
 					case '}':
-						return this.addToken(TokenType.RightCurly);
+						this.addToken(TokenType.RightCurly);
+						break;
 
 					case '[':
-						return this.addToken(TokenType.LeftSqaure);
+						this.addToken(TokenType.LeftSqaure);
+						break;
 					case ']':
-						return this.addToken(TokenType.RightSqaure);
+						this.addToken(TokenType.RightSqaure);
+						break;
 
 					case '(':
-						return this.addToken(TokenType.LeftParen);
+						this.addToken(TokenType.LeftParen);
+						break;
 					case ')':
-						return this.addToken(TokenType.RightParen);
+						this.addToken(TokenType.RightParen);
+						break;
 
 					case '^':
-						return this.addToken(TokenType.Exponent);
+						this.addToken(TokenType.Exponent);
+						break;
 					case '%':
-						return this.addToken(TokenType.Mod);
+						this.addToken(TokenType.Mod);
+						break;
 					case '+':
-						return this.addToken(TokenType.Plus);
+						this.addToken(TokenType.Plus);
+						break;
 					case '-':
-						return this.addToken(TokenType.Minus);
+						this.addToken(TokenType.Minus);
+						break;
 					case '*':
-						return this.addToken(TokenType.Multiply);
+						this.addToken(TokenType.Multiply);
+						break;
 					case '/':
 						if (this.isNotEnd() && this.look === '/') {
 							this.getChar();
 							while (this.isNotEnd() && this.look !== '\n') {
 								this.getChar();
 							}
-							return true;
+							break;
 						}
-						return this.addToken(TokenType.Divide);
+						this.addToken(TokenType.Divide);
+						break;
 
 					case '|':
 						if (this.isNotEnd() && this.look === '|') {
 							this.getChar();
-							return this.addToken(TokenType.Or);
+							this.addToken(TokenType.Or);
+							break;
 						}
-						return this.setError("Incomplete OR operator found, OR operators must be of boolean type '||'");
+						this.throwError("incomplete OR operator found, OR operators must be of boolean type '||'");
+						break;
+
 					case '&':
 						if (this.isNotEnd() && this.look === '&') {
 							this.getChar();
-							return this.addToken(TokenType.And);
+							this.addToken(TokenType.And);
+							break;
 						}
-						return this.setError("Incomplete AND operator found, AND operators must be of boolean type '&&'");
+						this.throwError("incomplete AND operator found, AND operators must be of boolean type '&&'");
+						break;
+
 					case '!':
 						if (this.isNotEnd() && this.look === '=') {
 							this.getChar();
-							return this.addToken(TokenType.NotEquals);
+							this.addToken(TokenType.NotEquals);
+							break;
 						}
-						return this.addToken(TokenType.Not);
+						this.addToken(TokenType.Not);
+						break;
 
 					case '=':
 						if (this.isNotEnd() && this.look === '=') {
 							this.getChar();
-							return this.addToken(TokenType.Equals);
+							this.addToken(TokenType.Equals);
+							break;
 						}
-						return this.addToken(TokenType.Assignment);
+						this.addToken(TokenType.Assignment);
+						break;
+
 					case '>':
 						if (this.isNotEnd() && this.look === '=') {
 							this.getChar();
-							return this.addToken(TokenType.GreaterEquals);
+							this.addToken(TokenType.GreaterEquals);
+							break;
 						}
-						return this.addToken(TokenType.Greater);
+						this.addToken(TokenType.Greater);
+						break;
 					case '<':
 						if (this.isNotEnd() && this.look === '=') {
 							this.getChar();
-							return this.addToken(TokenType.LesserEquals);
+							this.addToken(TokenType.LesserEquals);
+							break;
 						}
-						return this.addToken(TokenType.Lesser);
+						this.addToken(TokenType.Lesser);
+						break;
 
 					default:
-						return this.setError("Unexpected symbol found, " + symbol);
+						this.throwError("Unexpected symbol found, " + symbol);
 				}
 			}
 		}
-		return true;
 	}
 
 }

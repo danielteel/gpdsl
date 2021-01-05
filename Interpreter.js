@@ -1,4 +1,4 @@
-const Utils = require('./Utils');
+const {Utils} = require('./Utils');
 const {OpObjType, OpObj, RegisterObj, StringObj, NumberObj, BoolObj, Machine}=require('./OpObjs');
 
 const Tokenizer = require('./Tokenizer');
@@ -7,8 +7,6 @@ const {Program} = require('./Program');
 
 
 class Interpreter {
-	constructor(){
-	}
 
 	static funcDef(name, func, returnType, ...params){
 		let builtDef={};
@@ -16,17 +14,18 @@ class Interpreter {
 		builtDef.name=name;
 		builtDef.func=func;
 		builtDef.params=[];
+		builtDef.type=IdentityType.Function;
 
 		let type=returnType.toLowerCase().trim();
 		switch (type){
 			case "bool":
-				builtDef.type=IdentityType.BoolFunction;
+				builtDef.returnType=IdentityType.Bool;
 				break;
 			case "double":
-				builtDef.type=IdentityType.DoubleFunction;
+				builtDef.returnType=IdentityType.Double;
 				break;
 			case "string":
-				builtDef.type=IdentityType.StringFunction;
+				builtDef.returnType=IdentityType.String;
 				break;
 			default:
 				throw Error("Invalid func return type: '"+returnType+"', it can be bool, double, or string.");
@@ -53,61 +52,54 @@ class Interpreter {
 	}
 
 	runCode(code, optimize, ...externals){
-		let tokenizer=new Tokenizer(code);
-		let errorRecvd=tokenizer.tokenize();
+		let disassembled="";
+		try {
 
-		if (errorRecvd!==null){
-			errorRecvd.message="Tokenizer: "+errorRecvd.message;
-			return {error: errorRecvd};
-		}
-
-		const parserExternList=[];
-		const executeExternList=[];
-		if (externals){
-			for (let i=0;i<externals.length;i++){
-				if (externals[i] instanceof StringObj){
-					parserExternList.push({name: externals[i].name, type: IdentityType.String});
-					executeExternList.push(externals[i]);
-				}else if (externals[i] instanceof NumberObj){
-					parserExternList.push({name: externals[i].name, type: IdentityType.Double});
-					executeExternList.push(externals[i]);
-				}else if (externals[i] instanceof BoolObj){
-					parserExternList.push({name: externals[i].name, type: IdentityType.Bool});
-					executeExternList.push(externals[i]);
-				}else{
-					parserExternList.push(externals[i]);
-					executeExternList.push(externals[i].func);
+			//Build the external parsing list and execution list
+			const parserExternList=[];
+			const executeExternList=[];
+			if (externals){
+				for (let i=0;i<externals.length;i++){
+					if (externals[i] instanceof StringObj){
+						parserExternList.push({name: externals[i].name, type: IdentityType.String});
+						executeExternList.push(externals[i]);
+					}else if (externals[i] instanceof NumberObj){
+						parserExternList.push({name: externals[i].name, type: IdentityType.Double});
+						executeExternList.push(externals[i]);
+					}else if (externals[i] instanceof BoolObj){
+						parserExternList.push({name: externals[i].name, type: IdentityType.Bool});
+						executeExternList.push(externals[i]);
+					}else{
+						parserExternList.push(externals[i]);
+						executeExternList.push(externals[i].func);
+					}
 				}
 			}
+
+			//Tokenize
+			let tokenizer=new Tokenizer();
+			let tokenList=tokenizer.tokenize(code);
+
+			//Parse and generate byte code
+			let parser=new Parser(tokenList);
+			const program=parser.parse(parserExternList);
+
+			//Link and optionally optimize the byte code
+			program.link(optimize);
+
+			//Grab the disassembled byte code for debugging
+			disassembled = program.getDebugOutput();
+
+			//Execute the byte code
+			let exitObject=program.execute(executeExternList);
+
+			return {exitObject: exitObject, disassembled: disassembled};
+		} catch (error){
+			if (disassembled){
+				return {error: error, disassembled};
+			}
+			return {error: error};
 		}
-
-		let parser=new Parser(tokenizer.tokens);
-		const program=parser.parse(parserExternList);
-		if (!(program instanceof Program)){
-			errorRecvd = program;
-			errorRecvd.message="Parser: "+errorRecvd.message;
-			return {error: errorRecvd};
-		}
-
-
-		errorRecvd=program.link(optimize);
-		if (errorRecvd){
-			errorRecvd.message="Linker: "+errorRecvd.message;
-			return {error: errorRecvd};
-		}
-
-		const disassembled = program.getDebugOutput();
-
-
-		let exitObject=program.execute(executeExternList);
-
-		if (!(exitObject instanceof OpObj)){
-			errorRecvd=exitObject;
-			errorRecvd.message="Runtime: "+errorRecvd.message;
-			return {error: errorRecvd};
-		}
-		
-		return {return: exitObject, disassembled: disassembled};
 	}
 }
 

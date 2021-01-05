@@ -1,10 +1,11 @@
-const Utils = require('./Utils');
+const {Utils} = require('./Utils');
 
 const OpObjType={
 	bool: Symbol("bool"),
 	num: Symbol("number"),
 	string: Symbol("string"),
-	register: Symbol("register")
+	register: Symbol("register"),
+	null: Symbol("null")
 };
 
 
@@ -40,6 +41,7 @@ class RegisterObj extends OpObj {
 		this.stringObj=new StringObj(null, null, false);
 		this.boolObj=new BoolObj(null, null, false);
 		this.numberObj=new NumberObj(null, null, false);
+		this.nullObj = new NullObj();
 	}
 
 	getCopy(asNative){
@@ -67,6 +69,8 @@ class RegisterObj extends OpObj {
 
 	getNativeObj(){
 		switch (this._curValType){
+		case OpObjType.null:
+			return this.nullObj;
 		case OpObjType.string:
 			this.stringObj._value=this._value;
 			return this.stringObj;
@@ -99,17 +103,42 @@ class RegisterObj extends OpObj {
 	}
 }
 
+class NullObj extends OpObj {
+	constructor(){
+		super(null, OpObjType.null, null, true);
+	}
+
+	getCopy(){
+		return this;
+	}
+	setTo(obj){
+		throw new Error("tried to write to null");
+	}
+
+	eqaulTo(obj){
+		if (obj._value !== null) return false;
+		return true;
+	}
+	notEqualTo(obj){
+		return !this.eqaulTo(obj);
+	}
+	smallerThan(obj){
+		return false;
+	}
+	greaterThan(obj){
+		return false;
+	}
+	smallerOrEqualThan(obj){
+		return false;
+	}
+	greaterOrEqualThan(obj){
+		return false;
+	}
+}
+
 class BoolObj extends OpObj {
 	constructor(name, initialVal=false, isConstant=false){
 		super(name, OpObjType.bool, initialVal===null?null:Boolean(initialVal), isConstant);
-	}
-	
-	static nullObj = null;
-	static null(){
-		if (BoolObj.nullObj===null){
-			BoolObj.nullObj=new BoolObj(null, null, true);
-		}
-		return BoolObj.nullObj;
 	}
 	
 	getCopy(){
@@ -124,6 +153,9 @@ class BoolObj extends OpObj {
 		if (type===OpObjType.register) type=obj._curValType;
 
 		switch (type){
+		case OpObjType.null:
+			this._value=null;
+			break;
 		case OpObjType.bool:
 			this._value=obj._value;
 			break;
@@ -141,6 +173,8 @@ class BoolObj extends OpObj {
 		if (type===OpObjType.register) type=obj._curValType;
 
 		switch (type){
+		case OpObjType.null:
+			return this.value===null;
 		case OpObjType.bool:
 			return this._value===obj._value;
 		case OpObjType.num:
@@ -188,14 +222,6 @@ class NumberObj extends OpObj {
 	constructor(name, initialVal=null, isConstant=false){
 		super(name, OpObjType.num,  initialVal===null?null:Number(initialVal), isConstant);
 	}
-
-	static nullObj = null;
-	static null(){
-		if (NumberObj.nullObj===null){
-			NumberObj.nullObj=new NumberObj(null, null, true);
-		}
-		return NumberObj.nullObj;
-	}
 	
 	getCopy(){
 		return new NumberObj(this.name, this._value, this._isConstant);
@@ -209,6 +235,9 @@ class NumberObj extends OpObj {
 		if (type===OpObjType.register) type=obj._curValType;
 
 		switch (type){
+			case OpObjType.null:
+				this._value=null;
+				break;
 			case OpObjType.bool:
 				this._value=obj._value===null ? null : Number(obj._value);
 				break;
@@ -228,6 +257,8 @@ class NumberObj extends OpObj {
 		if (obj._value===null && this._value!==null) return false;
 		if (this._value===null && obj._value!==null) return false;
 		switch (type){
+			case OpObjType.null:
+				return this._value===null;
 			case OpObjType.bool:
 				return this._value===Number(obj._value);
 			case OpObjType.num:
@@ -276,14 +307,6 @@ class StringObj extends OpObj {
 		super(name, OpObjType.string,  initialVal===null?null:String(initialVal), isConstant);
 	}
 
-	static nullObj = null;
-	static null(){
-		if (StringObj.nullObj===null){
-			StringObj.nullObj=new StringObj(null, null, true);
-		}
-		return StringObj.nullObj;
-	}
-
 	getCopy(){
 		return new StringObj(this.name, this._value, this._isConstant);
 	}
@@ -296,6 +319,9 @@ class StringObj extends OpObj {
 		if (type===OpObjType.register) type=obj._curValType;
 
 		switch (type){
+			case OpObjType.null:
+				this._value=null;
+				break;
 			case OpObjType.string:
 				this._value=obj._value;
 				break;
@@ -313,6 +339,8 @@ class StringObj extends OpObj {
 		if (this._value===null && obj._value!==null) return false;
 
 		switch (type){
+			case OpObjType.null:
+				return this._value===null;
 			case OpObjType.string:
 				return this._value===obj._value;
 			default:
@@ -336,4 +364,4 @@ class StringObj extends OpObj {
 	}
 }
 
-module.exports={OpObjType, OpObj, RegisterObj, StringObj, NumberObj, BoolObj};
+module.exports={OpObjType, OpObj, NullObj, RegisterObj, StringObj, NumberObj, BoolObj};

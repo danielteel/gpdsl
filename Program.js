@@ -1,58 +1,58 @@
-const Utils = require("./Utils");
-const {OpObjType, OpObj, RegisterObj, StringObj, NumberObj, BoolObj} = require('./OpObjs');
+const {Utils, IdentityType} = require("./Utils");
+const {OpObjType, OpObj, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} = require('./OpObjs');
+
 
 const OpCode = {
-	label:	Symbol("label"),
+	label:		Symbol("label"),
 	jmp:		Symbol("jmp"),
 
 	cmp:		Symbol("cmp"),
-	test:	Symbol("test"),
+	test:		Symbol("test"),
 	
-	je:		Symbol("je"),
+	je:			Symbol("je"),
 	jne:		Symbol("jne"),
-	ja:		Symbol("ja"),
+	ja:			Symbol("ja"),
 	jae:		Symbol("jae"),
-	jb:		Symbol("jb"),
+	jb:			Symbol("jb"),
 	jbe:		Symbol("jbe"),
 
-	se:		Symbol("se"),
+	se:			Symbol("se"),
 	sne:		Symbol("sne"),
-	sa:		Symbol("sa"),
+	sa:			Symbol("sa"),
 	sae:		Symbol("sae"),
-	sb:		Symbol("sb"),
+	sb:			Symbol("sb"),
 	sbe:		Symbol("sbe"),
 
-	exit:	Symbol("exit"),
-	ceil:	Symbol("ceil"),
-	floor:	Symbol("floor"),
+	exit:		Symbol("exit"),
+	ceil:		Symbol("ceil"),
+	floor:		Symbol("floor"),
 	abs:		Symbol("abs"),
 	min:		Symbol("min"),
 	max:		Symbol("max"),
-	clamp:	Symbol("clamp"),
-	excall:	Symbol("excall"),
-	call:	Symbol("call"),
+	clamp:		Symbol("clamp"),
+	excall:		Symbol("excall"),
+	call:		Symbol("call"),
 	ret:		Symbol("ret"),
 	todouble:	Symbol("todouble"),
+	tobool:		Symbol("tobool"),
 	len:		Symbol("len"),
-	strcmp:	Symbol("strcmp"),
-	stricmp:	Symbol("stricmp"),
-	lcase:	Symbol("lcase"),
-	ucase:	Symbol("ucase"),
-	trim:	Symbol("trim"),
-	substr:	Symbol("substr"),
+	lcase:		Symbol("lcase"),
+	ucase:		Symbol("ucase"),
+	trim:		Symbol("trim"),
+	substr:		Symbol("substr"),
 	tostring:	Symbol("tostring"),
-	concat:	Symbol("concat"),
-	double:	Symbol("double"),
-	bool:	Symbol("bool"),
-	string:	Symbol("string"),
-	pushscope:Symbol("pushscope"),
+	concat:		Symbol("concat"),
+	double:		Symbol("double"),
+	bool:		Symbol("bool"),
+	string:		Symbol("string"),
+	pushscope:	Symbol("pushscope"),
 	popscope:	Symbol("popscope"),
-	push:	Symbol("push"),
+	push:		Symbol("push"),
 	pop:		Symbol("pop"),
 	codeline:	Symbol("codeLine"),
 	mov:		Symbol("mov"),
 	and:		Symbol("and"),
-	or:		Symbol("or"),
+	or:			Symbol("or"),
 	add:		Symbol("add"),
 	sub:		Symbol("sub"),
 	mul:		Symbol("mul"),
@@ -61,20 +61,14 @@ const OpCode = {
 	exponent:	Symbol("exponent"),
 	not:		Symbol("not"),
 	neg:		Symbol("neg"),
-	scopedepth:Symbol("scopedepth")
+	scopedepth:	Symbol("scopedepth")
 }
 
 const UnlinkedType={
-	register:		Symbol("register"),
-	double:		Symbol("double"),
-	bool:		Symbol("bool"),
-	string:		Symbol("string"),
-	doubleLiteral:	Symbol("double literal"),
-	boolLiteral:	Symbol("bool literal"),
-	stringLiteral:	Symbol("string literal"),
-	nilDouble:	Symbol("nil double"),
-	nilBool:		Symbol("nil bool"),
-	nilString:	Symbol("nil string"),
+	register:	Symbol("register"),
+	variable:	Symbol("variable"),
+	literal:	Symbol("literal"),
+	null:	Symbol("null"),
 }
 
 
@@ -89,15 +83,9 @@ class Program {
 		}
 		return null;
 	}
-	static unlinkedDouble(scope, index, debugName=null){	return {type: UnlinkedType.double,	scope: Number(scope), index: Number(index), debugName: debugName}; }
-	static unlinkedBool(scope, index, debugName=null){		return {type: UnlinkedType.bool,	scope: Number(scope), index: Number(index), debugName: debugName}; }
-	static unlinkedString(scope, index, debugName=null){	return {type: UnlinkedType.string,	scope: Number(scope), index: Number(index), debugName: debugName}; }
-	static unlinkedDoubleLiteral(value){	return {type: UnlinkedType.doubleLiteral,	value: Number(value)}; }
-	static unlinkedBoolLiteral(value){		return {type: UnlinkedType.boolLiteral,		value: Boolean(value)}; }
-	static unlinkedStringLiteral(value){	return {type: UnlinkedType.stringLiteral,	value: String(value)};}
-	static unlinkedNilDouble(){				return {type: UnlinkedType.nilDouble}; }
-	static unlinkedNilBool(){				return {type: UnlinkedType.nilBool}; }
-	static unlinkedNilString(){				return {type: UnlinkedType.nilString}; }
+	static unlinkedVariable(type, scope, index, debugName=null)	{ return {type: UnlinkedType.variable,	identType: type,	scope, index, debugName}; }
+	static unlinkedLiteral(type, value)							{ return {type: UnlinkedType.literal,	literalType: type,	value}; }
+	static unlinkedNull()										{ return {type: UnlinkedType.null}; }
 
 	static CodeState = {
 		BUILDING:	Symbol("Building"),
@@ -119,29 +107,25 @@ class Program {
 		this.true=new BoolObj("true", true, true);
 		this.false=new BoolObj("false", false, true);
 		this.zero=new NumberObj("zero",0,true);
+		this.null=new NullObj();
 	}
 
 
 	unlinkedsEqual(obj, obj1){
 		if (obj.type!==obj1.type) return false;
+
 		if (obj.type===UnlinkedType.register){
 			if (obj.register!==obj1.register) return false;
 			return true;
+		} else if (obj.type=== UnlinkedType.variable){
+			if (obj.scope!==obj1.scope || obj.index!==obj1.index) return false;
+			return true;
+		} else if (obj.type===UnlinkedType.literal){
+			if (obj.value!==obj1.value) return false;
+			return true;
 		}
-		switch (obj.type){
-			case UnlinkedType.double:
-			case UnlinkedType.bool:
-			case UnlinkedType.string:
-				if (obj.scope!==obj1.scope || obj.index!==obj1.index) return false;
-				return true;
 
-			case UnlinkedType.doubleLiteral:
-			case UnlinkedType.boolLiteral:
-			case UnlinkedType.stringLiteral:
-				if (obj.value!==obj1.value) return false;
-				return true;
-		}
-		return true;//must be a nil literal			
+		return true;//must be a null literal			
 	}
 
 	isBOnAOp(opcode){
@@ -245,6 +229,11 @@ class Program {
 						if (this.unlinkedsEqual(cur.obj0, cur.obj1)){ 	// mov(X, X) => nothing
 							this.code.splice(i,1);
 							stillOptimizing=true;
+						}else if (nxt.type===OpCode.neg && cur.obj0.type===UnlinkedType.register && this.unlinkedsEqual(cur?.obj0, nxt?.obj0) && cur.obj1.literalType===IdentityType.Double){
+							cur.obj1.value=0-cur.obj1.value;
+							this.code.splice(i+1,1);
+							i--;
+							stillOptimizing=true;
 						}else if (nxt.type===OpCode.add && nxtnxt?.type===OpCode.mov &&// MOV ADD MOV => ADD
 							nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register &&
 							this.unlinkedsEqual(nxt.obj0, nxtnxt.obj1) && (this.unlinkedsEqual(cur.obj0, nxt.obj1) || this.unlinkedsEqual(cur.obj0, nxt.obj0))){
@@ -278,18 +267,18 @@ class Program {
 								i--;
 								stillOptimizing=true;
 							}
-						} else if (nxt.type===OpCode.cmp && cur.obj0.type==UnlinkedType.register && (this.unlinkedsEqual(cur.obj0, nxt.obj0) || this.unlinkedsEqual(cur.obj0, nxt.obj1))){// mov(eax, X) + cmp(eax, Y) => cmp(X, Y)
-							if (this.unlinkedsEqual(cur.obj0, nxt.obj0)){ 
-								nxt.obj0=cur.obj1;
-								this.code.splice(i,1);
-								i--;
-								stillOptimizing=true;
-							}else if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){	// mov(eax, X) + cmp(Y, eax) => cmp(Y, X)
-								nxt.obj1=cur.obj1;
-								this.code.splice(i,1);
-								i--;
-								stillOptimizing=true;
-							}
+						// } else if (nxt.type===OpCode.cmp && cur.obj0.type==UnlinkedType.register && (this.unlinkedsEqual(cur.obj0, nxt.obj0) || this.unlinkedsEqual(cur.obj0, nxt.obj1))){// mov(eax, X) + cmp(eax, Y) => cmp(X, Y)
+						// 	if (this.unlinkedsEqual(cur.obj0, nxt.obj0)){ 
+						// 		nxt.obj0=cur.obj1;
+						// 		this.code.splice(i,1);
+						// 		i--;
+						// 		stillOptimizing=true;
+						// 	}else if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){	// mov(eax, X) + cmp(Y, eax) => cmp(Y, X)
+						// 		nxt.obj1=cur.obj1;
+						// 		this.code.splice(i,1);
+						// 		i--;
+						// 		stillOptimizing=true;
+						// 	}
 						} else if (this.isBOnAOp(nxt) && cur.obj0.type===UnlinkedType.register && cur.obj0.type===UnlinkedType.register){// mov(eax, X) + add(Y, eax) => add(Y, X)
 							if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
 								nxt.obj1=cur.obj1;					
@@ -323,14 +312,14 @@ class Program {
 		if (this.codeState===Program.CodeState.READY) return null;
 		if (this.codeState===Program.CodeState.BUILDING && optimize){
 			this.optimize();
-			if (this.codeState!==Program.CodeState.OPTIMIZED) return Utils.newErrorObj("error optimizing.");
+			if (this.codeState!==Program.CodeState.OPTIMIZED) this.otherError("error optimizing");
 		}
 
 		const labelMap = new Map();
 		for (let i=0;i<this.code.length;i++){//Make a map of all the labels and there indexes
 			if (this.code[i].type===OpCode.label){
 				if (labelMap.has(this.code[i].id)){
-					return Utils.newErrorObj("error linking, "+this.code[i].id+" was already defined.");
+					this.otherError("error linking, "+this.code[i].id+" was already defined")
 				}
 				labelMap.set(this.code[i].id, i);
 
@@ -353,9 +342,7 @@ class Program {
 					break;
 			}
 		}
-		
 		this.codeState=Program.CodeState.READY;
-		return null;
 	}
 
 	linkedObject(obj, scopes){
@@ -369,57 +356,57 @@ class Program {
 					case Program.regSymbols.ecx:
 						return this.ecx;
 				}
-				return null;
+				this.executionError("unknown register");
 
-			case UnlinkedType.double:
-			case UnlinkedType.bool:
-			case UnlinkedType.string:
+			case UnlinkedType.variable:
 				return scopes[obj.scope][scopes[obj.scope].length-1][obj.index];
 
-			case UnlinkedType.doubleLiteral:
-				return new NumberObj(null, obj.value, true);
-			case UnlinkedType.boolLiteral:
-				if (obj.value) return this.true;
-				return this.false;
-			case UnlinkedType.stringLiteral:
-				return new StringObj(null, obj.value, true);
+			case UnlinkedType.literal:
+				switch (obj.literalType){
+					case IdentityType.Bool:
+						if (obj.value===true) return this.true;
+						return this.false;
+					case IdentityType.Double:
+						return new NumberObj(null, obj.value, true);
+					case IdentityType.String:
+						return new StringObj(null, obj.value, true);
+					default:
+						this.executionError("unknown unlinked literal type");
+				}
 
-			case UnlinkedType.nilDouble:
-				return NumberObj.null();
-			case UnlinkedType.nilBool:
-				return BoolObj.null();
-			case UnlinkedType.nilString:
-				return StringObj.null();
+			case UnlinkedType.null:
+				return this.null;
 		}		
-		return null;
+		this.executionError("unknown unlinked object type");
 	}
 
+	otherError(message){
+		throw Error("Pre-execution error: "+message);
+	}
 
-	executionError(eip, message){
-		return Utils.newErrorObj(eip, message);
+	executionError(message){
+		throw Error(message);
 	}
 
 	execute(externals){
-		const link = (obj) => this.linkedObject(obj, scopes);
-
-		if (this.codeState!==Program.CodeState.READY){
-			return this.executionError(null, "tried executing on unlinked code")
-		}
-		this.debugCodeLine=1;
-
-		let notDone=true;
 		let eip = 0;
+		try {
+			const link = (obj) => this.linkedObject(obj, scopes);
 
-		let scopes=[[externals]];
+			if (this.codeState!==Program.CodeState.READY) this.executionError("tried executing on unlinked code")
+		
+			this.debugCodeLine=1;
 
-		let callStack=[];
-		let stack=[];
+			let notDone=true;
 
-		let flag_e=false;
-		let flag_a=false;
-		let flag_b=false;
+			let scopes=[[externals]];
 
-		let errMsg=null;
+			let callStack=[];
+			let stack=[];
+
+			let flag_e=false;
+			let flag_a=false;
+			let flag_b=false;
 		
 			while (notDone && eip<this.code.length){
 				let opcode=this.code[eip];
@@ -431,7 +418,7 @@ class Program {
 						break;
 
 					case OpCode.excall:
-						if ( (errMsg=this.eax.setTo(externals[opcode.id]( () => stack.pop() ))) !==null ) return this.executionError(eip, errMsg);
+						this.eax.setTo(externals[opcode.id]( () => stack.pop() ));
 						break;
 					case OpCode.call:
 						callStack.push(eip+1);
@@ -454,8 +441,15 @@ class Program {
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
 						flag_e=obj0.eqaulTo(obj1);
-						flag_a=obj0.greaterThan(obj1);
-						flag_b=obj0.smallerThan(obj1);
+						if (((obj0.objType===OpObjType.register && obj0._curValType===OpObjType.num) || obj0.objType===OpObjType.num) &&
+							((obj1.objType===OpObjType.register && obj1._curValType===OpObjType.num) || obj1.objType===OpObjType.num)){
+								
+							flag_a=obj0.greaterThan(obj1);
+							flag_b=obj0.smallerThan(obj1);
+						}else{
+							flag_a=false;
+							flag_b=false;
+						}
 						break;
 
 					case OpCode.je:
@@ -496,110 +490,106 @@ class Program {
 						break;
 
 					case OpCode.se:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_e?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
+						link(opcode.obj0).setTo(flag_e?this.true:this.false)
 						break;
 					case OpCode.sne:
-						if ( (errMsg=link(opcode.obj0).setTo(!flag_e?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
+						link(opcode.obj0).setTo(!flag_e?this.true:this.false)
 						break;
 					case OpCode.sa:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_a?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
+						link(opcode.obj0).setTo(flag_a?this.true:this.false)
 						break;
 					case OpCode.sae:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_a||flag_e?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
+						link(opcode.obj0).setTo(flag_a||flag_e?this.true:this.false)
 						break;
 					case OpCode.sb:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_b?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
+						link(opcode.obj0).setTo(flag_b?this.true:this.false)
 						break;
 					case OpCode.sbe:
-						if ( (errMsg=link(opcode.obj0).setTo(flag_b||flag_e?this.true:this.false)) !==null ) return this.executionError(eip, errMsg);
+						link(opcode.obj0).setTo(flag_b||flag_e?this.true:this.false)
 						break;
 						
 					case OpCode.ceil:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to do ceil on null value");	
-						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.ceil(obj0.value), true))) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to do ceil on null value");
+						obj0.setTo(new NumberObj(null, Math.ceil(obj0.value), true));
 						break;
 					case OpCode.floor:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to do floor on null value");
-						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.floor(obj0.value), true))) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to do floor on null value");
+						obj0.setTo(new NumberObj(null, Math.floor(obj0.value), true));
 						break;
 					case OpCode.abs:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to do abs on null value");	
-						if ( (errMsg=obj0.setTo(new NumberObj(null, Math.abs(obj0.value), true))) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to do abs on null value");
+						obj0.setTo(new NumberObj(null, Math.abs(obj0.value), true));
 						break;
 					case OpCode.min:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) return this.executionError(eip, "tried to do min on null value");	
-						if (obj1.value===null) return this.executionError(eip, "tried to do min on null value");	
-						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.min(obj0.value, obj1.value), true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to do min on null value");	
+						if (obj1.value===null) this.executionError("tried to do min on null value");	
+						obj0.setTo( new NumberObj(null, Math.min(obj0.value, obj1.value), true) );
 						break;
 					case OpCode.max:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) return this.executionError(eip, "tried to do max on null value");	
-						if (obj1.value===null) return this.executionError(eip, "tried to do max on null value");	
-						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.max(obj0.value, obj1.value), true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to do max on null value");	
+						if (obj1.value===null) this.executionError("tried to do max on null value");	
+						obj0.setTo( new NumberObj(null, Math.max(obj0.value, obj1.value), true) );
 						break;
 					case OpCode.clamp:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
 						obj2 = link(opcode.obj2);
-						if (obj0.value===null) return this.executionError(eip, "tried to do clamp on null value");	
-						if (obj1.value===null) return this.executionError(eip, "tried to do clamp on null value");	
-						if (obj2.value===null) return this.executionError(eip, "tried to do clamp on null value");	
-						if ( (errMsg=obj0.setTo( new NumberObj(null, Math.min(Math.max(obj0.value, obj1.value), obj2.value), true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to do clamp on null value");
+						if (obj1.value===null) this.executionError("tried to do clamp on null value");
+						if (obj2.value===null) this.executionError("tried to do clamp on null value");
+						obj0.setTo( new NumberObj(null, Math.min(Math.max(obj0.value, obj1.value), obj2.value), true) );
 						break;
 					case OpCode.todouble:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to convert null to double");	
-						if ( (errMsg=obj0.setTo(new NumberObj(null, Number(obj0.value), true))) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to convert null to double");	
+						obj0.setTo(new NumberObj(null, Number(obj0.value), true));
+						break;
+					case OpCode.tobool:
+						obj0 = link(opcode.obj0);
+						if (obj0.value===null) this.executionError("tried to convert null to bool");
+						obj0.setTo(new BoolObj(null, Boolean(obj0.value), true));
 						break;
 					case OpCode.len:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to get length of null string");
-						if ( (errMsg=obj0.setTo(new NumberObj(null, obj0.value.length, true))) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to get length of null string");
+						obj0.setTo(new NumberObj(null, obj0.value.length, true));
 						break;
-					case OpCode.strcmp:
-						obj0 = link(opcode.obj0);
-						obj1 = link(opcode.obj1);
-						if ( (errMsg=obj0.setTo(new BoolObj(null, obj0.value===obj1.value, true))) !==null ) return this.executionError(eip, errMsg);
-						break;
-					case OpCode.stricmp:
-						obj0 = link(opcode.obj0);
-						obj1 = link(opcode.obj1);
-						if ( (errMsg=obj0.setTo(new BoolObj(null, obj0.value.toLowerCase()===obj1.value.toLowerCase(), true))) !==null ) return this.executionError(eip, errMsg);
-						break;
+
 					case OpCode.lcase:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to set null string to lower case");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.toLowerCase(), true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to set null string to lower case");
+						obj0.setTo( new StringObj(null, obj0.value.toLowerCase(), true) );
 						break;
 					case OpCode.ucase:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to set null string to upper case");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.toUpperCase(), true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to set null string to upper case");
+						obj0.setTo( new StringObj(null, obj0.value.toUpperCase(), true) );
 						break;
 					case OpCode.trim:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to trim null string");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.trim(), true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to trim null string");
+						obj0.setTo( new StringObj(null, obj0.value.trim(), true) );
 						break;
 					case OpCode.substr:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
 						obj2 = link(opcode.obj2);
-						if (obj0.value===null) return this.executionError(eip, "tried to get substring of null string");
-						if (obj1.value===null) return this.executionError(eip, "tried to get substring with null index");
-						if (obj2.value===null) return this.executionError(eip, "tried to get substring with null length");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value.substr(obj1.value, obj2.value), true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to get substring of null string");
+						if (obj1.value===null) this.executionError("tried to get substring with null index");
+						if (obj2.value===null) this.executionError("tried to get substring with null length");
+						obj0.setTo( new StringObj(null, obj0.value.substr(obj1.value, obj2.value), true) );
 						break;
 					case OpCode.tostring:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) return this.executionError(eip, "tried to convert null to string");
+						if (obj0.value===null) this.executionError("tried to convert null to string");
 						let val=obj0.value;
 						if (obj1.value!==null){
 							if (obj1.value>=0) val=Number(val).toFixed(obj1.value);
@@ -610,14 +600,14 @@ class Program {
 						}else{
 							val=String(val);
 						}
-						if ( (errMsg=obj0.setTo( new StringObj(null, val, true) )) !==null ) return this.executionError(eip, errMsg);
+						obj0.setTo( new StringObj(null, val, true) );
 						break;
 					case OpCode.concat:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) return this.executionError(eip, "tried to concat null to string");
-						if (obj1.value===null) return this.executionError(eip, "tried to concat string to null");
-						if ( (errMsg=obj0.setTo( new StringObj(null, obj0.value+obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to concat null to string");
+						if (obj1.value===null) this.executionError("tried to concat string to null");
+						obj0.setTo( new StringObj(null, obj0.value+obj1.value, true) );
 						break;
 					case OpCode.double:
 						scopes[opcode.obj0.scope][scopes[opcode.obj0.scope].length-1][opcode.obj0.index]=new NumberObj(null, null, false);
@@ -638,7 +628,7 @@ class Program {
 						stack.push(link(opcode.obj0).getCopy());
 						break;
 					case OpCode.pop:
-						if ( (errMsg=link(opcode.obj0).setTo(stack.pop())) !==null ) return this.executionError(eip, errMsg);
+						link(opcode.obj0).setTo(stack.pop());
 						break;
 					case OpCode.codeline:
 						//essentially a nop
@@ -648,59 +638,70 @@ class Program {
 						}
 						break;
 					case OpCode.mov:
-						if ( (errMsg=link(opcode.obj0).setTo(link(opcode.obj1))) !==null ) return this.executionError(eip, errMsg);
+						link(opcode.obj0).setTo(link(opcode.obj1));
 						break;
 					case OpCode.and:
 						obj0=link(opcode.obj0);
-						if ( (errMsg=obj0.setTo( new BoolObj(null, obj0.value && link(opcode.obj1).value, true) )) !==null ) return this.executionError(eip, errMsg);
+						obj0.setTo( new BoolObj(null, obj0.value && link(opcode.obj1).value, true) );
 						break;
 					case OpCode.or:
 						obj0=link(opcode.obj0);
-						if ( (errMsg=obj0.setTo( new BoolObj(null, obj0.value || link(opcode.obj1).value, true) )) !==null ) return this.executionError(eip, errMsg);
+						obj0.setTo( new BoolObj(null, obj0.value || link(opcode.obj1).value, true) );
 						break;
 					case OpCode.add:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to add null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value + obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null || obj1.value===null) this.executionError("tried to add null");
+						obj0.setTo( new NumberObj(null, obj0.value + obj1.value, true) );
 						break;
 					case OpCode.sub:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to sub null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value - obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null || obj1.value===null) this.executionError("tried to sub null");
+						obj0.setTo( new NumberObj(null, obj0.value - obj1.value, true) );
 						break;
 					case OpCode.mul:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value * obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						obj0.setTo( new NumberObj(null, obj0.value * obj1.value, true) );
 						break;
 					case OpCode.div:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to div null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value / obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null || obj1.value===null) this.executionError("tried to div with a null value");
+						
+						if (Utils.isAboutEquals(obj1.value,0)){//divide by zero! set it to null
+							obj0.setTo( this.null );
+						}else{
+							obj0.setTo( new NumberObj(null, obj0.value / obj1.value, true) );
+						}
 						break;
 					case OpCode.mod:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to mod null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value % obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null || obj1.value===null) this.executionError("tried to mod with a null value");
+
+						if (Utils.isAboutEquals(obj1.value,0)){//divide by zero! set it to null
+							obj0.setTo( this.null );
+						}else{
+							obj0.setTo( new NumberObj(null, obj0.value % obj1.value, true) );
+						}
 						break;
 					case OpCode.exponent:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						if (obj0.value===null || obj1.value===null) return this.executionError(eip, "tried to ^ null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, obj0.value ** obj1.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null || obj1.value===null) this.executionError("tried to do exponentiation with a null value");
+						obj0.setTo( new NumberObj(null, obj0.value ** obj1.value, true) );
 						break;
 					case OpCode.not:
 						obj0=link(opcode.obj0);
-						if ( (errMsg=obj0.setTo( new BoolObj(null, !obj0.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to not a null value");
+						obj0.setTo( new BoolObj(null, !obj0.value, true) );
 						break;
 					case OpCode.neg:
 						obj0=link(opcode.obj0);
-						if (obj0.value===null) return this.executionError(eip, "tried to neg null");
-						if ( (errMsg=obj0.setTo( new NumberObj(null, 0-obj0.value, true) )) !==null ) return this.executionError(eip, errMsg);
+						if (obj0.value===null) this.executionError("tried to neg null value");
+						obj0.setTo( new NumberObj(null, 0-obj0.value, true) );
 						break;
 					case OpCode.scopedepth:
 						for (let i=0;i<opcode.size;i++){
@@ -711,61 +712,63 @@ class Program {
 				eip++;
 			}
 
-		return new BoolObj(null, true, true);
+			return new BoolObj(null, true, true);
+		} catch (error) {
+			throw Error("Execution error at address "+eip+": "+error.message);
+		}
 	}
 
-	addRet			()					{ this.code.push( {type: OpCode.ret} ); }
-	addLabel			(id)					{ this.code.push( {type: OpCode.label,		id: id} ); }
-	addJmp			(id)					{ this.code.push( {type: OpCode.jmp,		id: id} ); }
-	addJE			(id)					{ this.code.push( {type: OpCode.je,		id: id} ); }
-	addJNE			(id)					{ this.code.push( {type: OpCode.jne,		id: id} ); }
-	addScopeDepth		(size)				{ this.code.push( {type: OpCode.scopedepth,	size: size} ); }
-	addTest			(obj0)				{ this.code.push( {type: OpCode.test,		obj0: obj0} ); }
-	addSE			(obj0)				{ this.code.push( {type: OpCode.se,		obj0: obj0} ); }
-	addSNE			(obj0)				{ this.code.push( {type: OpCode.sne,		obj0: obj0} ); }
-	addSA			(obj0)				{ this.code.push( {type: OpCode.sa,		obj0: obj0} ); }
-	addSAE			(obj0)				{ this.code.push( {type: OpCode.sae,		obj0: obj0} ); }
-	addSB			(obj0)				{ this.code.push( {type: OpCode.sb,		obj0: obj0} ); }
-	addSBE			(obj0)				{ this.code.push( {type: OpCode.sbe,		obj0: obj0} ); }
-	addExit			(obj0)				{ this.code.push( {type: OpCode.exit,		obj0: obj0} ); }
-	addCeil			(obj0)				{ this.code.push( {type: OpCode.ceil,		obj0: obj0} ); }
-	addFloor			(obj0)				{ this.code.push( {type: OpCode.floor,		obj0: obj0} ); }
-	addAbs			(obj0)				{ this.code.push( {type: OpCode.abs,		obj0: obj0} ); }
-	addToDouble		(obj0)				{ this.code.push( {type: OpCode.todouble,	obj0: obj0} ); }
-	addLen			(obj0)				{ this.code.push( {type: OpCode.len,		obj0: obj0} ); }
-	addLCase			(obj0)				{ this.code.push( {type: OpCode.lcase,		obj0: obj0} ); }
-	addUCase			(obj0)				{ this.code.push( {type: OpCode.ucase,		obj0: obj0} ); }
-	addTrim			(obj0)				{ this.code.push( {type: OpCode.trim,		obj0: obj0} ); }
-	addDouble			(obj0)				{ this.code.push( {type: OpCode.double,		obj0: obj0} ); }
-	addBool			(obj0)				{ this.code.push( {type: OpCode.bool,		obj0: obj0} ); }
-	addString			(obj0)				{ this.code.push( {type: OpCode.string,		obj0: obj0} ); }
-	addPush			(obj0)				{ this.code.push( {type: OpCode.push,		obj0: obj0} ); }
-	addPop			(obj0)				{ this.code.push( {type: OpCode.pop,		obj0: obj0} ); }
-	addNot			(obj0)				{ this.code.push( {type: OpCode.not,		obj0: obj0} ); }
-	addNeg			(obj0)				{ this.code.push( {type: OpCode.neg,		obj0: obj0} ); }
-	addCodeLine		(code)				{ this.code.push( {type: OpCode.codeline,	code: code} ); }
-	addPopScope		(scope)				{ this.code.push( {type: OpCode.popscope,	scope: scope} ); }
-	addToString		(obj0, obj1)			{ this.code.push( {type: OpCode.tostring,	obj0: obj0, obj1: obj1} ); }
-	addCmp			(obj0, obj1)			{ this.code.push( {type: OpCode.cmp,		obj0: obj0, obj1: obj1} ); }
-	addConcat			(obj0, obj1)			{ this.code.push( {type: OpCode.concat,		obj0: obj0, obj1: obj1} ); }
-	addStrCmp			(obj0, obj1)			{ this.code.push( {type: OpCode.strcmp,		obj0: obj0, obj1: obj1} ); }
-	addStrICmp		(obj0, obj1)			{ this.code.push( {type: OpCode.stricmp,	obj0: obj0, obj1: obj1} ); }
-	addMin			(obj0, obj1)			{ this.code.push( {type: OpCode.min,		obj0: obj0, obj1: obj1} ); }
-	addMax			(obj0, obj1)			{ this.code.push( {type: OpCode.max,		obj0: obj0, obj1: obj1} ); }
-	addMov			(obj0, obj1)			{ this.code.push( {type: OpCode.mov,		obj0: obj0, obj1: obj1} ); }
-	addAnd			(obj0, obj1)			{ this.code.push( {type: OpCode.and,		obj0: obj0, obj1: obj1} ); }
-	addOr			(obj0, obj1)			{ this.code.push( {type: OpCode.or,		obj0: obj0, obj1: obj1} ); }
-	addAdd			(obj0, obj1)			{ this.code.push( {type: OpCode.add,		obj0: obj0, obj1: obj1} ); }
-	addSub			(obj0, obj1)			{ this.code.push( {type: OpCode.sub,		obj0: obj0, obj1: obj1} ); }
-	addMul			(obj0, obj1)			{ this.code.push( {type: OpCode.mul,		obj0: obj0, obj1: obj1} ); }
-	addDiv			(obj0, obj1)			{ this.code.push( {type: OpCode.div,		obj0: obj0, obj1: obj1} ); }
-	addMod			(obj0, obj1)			{ this.code.push( {type: OpCode.mod,		obj0: obj0, obj1: obj1} ); }
-	addExponent		(obj0, obj1)			{ this.code.push( {type: OpCode.exponent,	obj0: obj0, obj1: obj1} ); }
-	addPushScope		(scope, size)			{ this.code.push( {type: OpCode.pushscope,	scope: scope, size: size} ); }
-	addCall			(id, debugName)		{ this.code.push( {type: OpCode.call,		id: id, debugName: debugName} ); }
-	addExCall			(id, debugName)		{ this.code.push( {type: OpCode.excall,		id: id, debugName: debugName} ); }
-	addSubStr			(obj0, obj1, obj2)		{ this.code.push( {type: OpCode.substr,		obj0: obj0, obj1: obj1, obj2: obj2} ); }
-	addClamp			(obj0, obj1, obj2)		{ this.code.push( {type: OpCode.clamp,		obj0: obj0, obj1: obj1, obj2: obj2} ); }
+	addRet			()						{ return this.code.push( {type: OpCode.ret} )-1; }
+	addLabel		(id)					{ return this.code.push( {type: OpCode.label,		id: id} )-1; }
+	addJmp			(id)					{ return this.code.push( {type: OpCode.jmp,			id: id} )-1; }
+	addJE			(id)					{ return this.code.push( {type: OpCode.je,			id: id} )-1; }
+	addJNE			(id)					{ return this.code.push( {type: OpCode.jne,			id: id} )-1; }
+	addScopeDepth	(size)					{ return this.code.push( {type: OpCode.scopedepth,	size: size} )-1; }
+	addTest			(obj0)					{ return this.code.push( {type: OpCode.test,		obj0: obj0} )-1; }
+	addSE			(obj0)					{ return this.code.push( {type: OpCode.se,			obj0: obj0} )-1; }
+	addSNE			(obj0)					{ return this.code.push( {type: OpCode.sne,			obj0: obj0} )-1; }
+	addSA			(obj0)					{ return this.code.push( {type: OpCode.sa,			obj0: obj0} )-1; }
+	addSAE			(obj0)					{ return this.code.push( {type: OpCode.sae,			obj0: obj0} )-1; }
+	addSB			(obj0)					{ return this.code.push( {type: OpCode.sb,			obj0: obj0} )-1; }
+	addSBE			(obj0)					{ return this.code.push( {type: OpCode.sbe,			obj0: obj0} )-1; }
+	addExit			(obj0)					{ return this.code.push( {type: OpCode.exit,		obj0: obj0} )-1; }
+	addCeil			(obj0)					{ return this.code.push( {type: OpCode.ceil,		obj0: obj0} )-1; }
+	addFloor		(obj0)					{ return this.code.push( {type: OpCode.floor,		obj0: obj0} )-1; }
+	addAbs			(obj0)					{ return this.code.push( {type: OpCode.abs,			obj0: obj0} )-1; }
+	addToDouble		(obj0)					{ return this.code.push( {type: OpCode.todouble,	obj0: obj0} )-1; }
+	addToBool		(obj0)					{ return this.code.push( {type: OpCode.tobool,		obj0: obj0} )-1; }
+	addLen			(obj0)					{ return this.code.push( {type: OpCode.len,			obj0: obj0} )-1; }
+	addLCase		(obj0)					{ return this.code.push( {type: OpCode.lcase,		obj0: obj0} )-1; }
+	addUCase		(obj0)					{ return this.code.push( {type: OpCode.ucase,		obj0: obj0} )-1; }
+	addTrim			(obj0)					{ return this.code.push( {type: OpCode.trim,		obj0: obj0} )-1; }
+	addDouble		(obj0)					{ return this.code.push( {type: OpCode.double,		obj0: obj0} )-1; }
+	addBool			(obj0)					{ return this.code.push( {type: OpCode.bool,		obj0: obj0} )-1; }
+	addString		(obj0)					{ return this.code.push( {type: OpCode.string,		obj0: obj0} )-1; }
+	addPush			(obj0)					{ return this.code.push( {type: OpCode.push,		obj0: obj0} )-1; }
+	addPop			(obj0)					{ return this.code.push( {type: OpCode.pop,			obj0: obj0} )-1; }
+	addNot			(obj0)					{ return this.code.push( {type: OpCode.not,			obj0: obj0} )-1; }
+	addNeg			(obj0)					{ return this.code.push( {type: OpCode.neg,			obj0: obj0} )-1; }
+	addCodeLine		(code)					{ return this.code.push( {type: OpCode.codeline,	code: code} )-1; }
+	addPopScope		(scope)					{ return this.code.push( {type: OpCode.popscope,	scope: scope} )-1; }
+	addToString		(obj0, obj1)			{ return this.code.push( {type: OpCode.tostring,	obj0: obj0, obj1: obj1} )-1; }
+	addCmp			(obj0, obj1)			{ return this.code.push( {type: OpCode.cmp,			obj0: obj0, obj1: obj1} )-1; }
+	addConcat		(obj0, obj1)			{ return this.code.push( {type: OpCode.concat,		obj0: obj0, obj1: obj1} )-1; }
+	addMin			(obj0, obj1)			{ return this.code.push( {type: OpCode.min,			obj0: obj0, obj1: obj1} )-1; }
+	addMax			(obj0, obj1)			{ return this.code.push( {type: OpCode.max,			obj0: obj0, obj1: obj1} )-1; }
+	addMov			(obj0, obj1)			{ return this.code.push( {type: OpCode.mov,			obj0: obj0, obj1: obj1} )-1; }
+	addAnd			(obj0, obj1)			{ return this.code.push( {type: OpCode.and,			obj0: obj0, obj1: obj1} )-1; }
+	addOr			(obj0, obj1)			{ return this.code.push( {type: OpCode.or,			obj0: obj0, obj1: obj1} )-1; }
+	addAdd			(obj0, obj1)			{ return this.code.push( {type: OpCode.add,			obj0: obj0, obj1: obj1} )-1; }
+	addSub			(obj0, obj1)			{ return this.code.push( {type: OpCode.sub,			obj0: obj0, obj1: obj1} )-1; }
+	addMul			(obj0, obj1)			{ return this.code.push( {type: OpCode.mul,			obj0: obj0, obj1: obj1} )-1; }
+	addDiv			(obj0, obj1)			{ return this.code.push( {type: OpCode.div,			obj0: obj0, obj1: obj1} )-1; }
+	addMod			(obj0, obj1)			{ return this.code.push( {type: OpCode.mod,			obj0: obj0, obj1: obj1} )-1; }
+	addExponent		(obj0, obj1)			{ return this.code.push( {type: OpCode.exponent,	obj0: obj0, obj1: obj1} )-1; }
+	addPushScope	(scope, size)			{ return this.code.push( {type: OpCode.pushscope,	scope: scope, size: size} )-1; }
+	addCall			(id, debugName)			{ return this.code.push( {type: OpCode.call,		id: id, debugName: debugName} )-1; }
+	addExCall		(id, debugName)			{ return this.code.push( {type: OpCode.excall,		id: id, debugName: debugName} )-1; }
+	addSubStr		(obj0, obj1, obj2)		{ return this.code.push( {type: OpCode.substr,		obj0: obj0, obj1: obj1, obj2: obj2} )-1; }
+	addClamp		(obj0, obj1, obj2)		{ return this.code.push( {type: OpCode.clamp,		obj0: obj0, obj1: obj1, obj2: obj2} )-1; }
 
 
 
@@ -775,20 +778,11 @@ class Program {
 		switch (obj.type){
 			case UnlinkedType.register:
 				return " "+obj.debugName;
-			case UnlinkedType.double:
-			case UnlinkedType.bool:
-			case UnlinkedType.string:
+			case UnlinkedType.variable:
 				return " _"+obj.debugName;
-
-			case UnlinkedType.doubleLiteral:
-				case UnlinkedType.boolLiteral:
+			case UnlinkedType.literal:
 				return obj.value.toString();
-			case UnlinkedType.stringLiteral:
-				return '"'+obj.value+'"';
-
-			case UnlinkedType.nilDouble:
-			case UnlinkedType.nilBool:
-			case UnlinkedType.nilString:
+			case UnlinkedType.null:
 				return "null";
 		}		
 		return null;										
@@ -796,7 +790,8 @@ class Program {
 
 	getDebugOutput(onlyPrintOpCodes=false){
 		let codeLine=0;
-		let output=String("DISASSEMBLED VIEW - Length: "+this.code.reduce((prev, cur)=>(prev+(cur.type!==OpCode.codeline && cur.type!==OpCode.label)),0))+"\n";
+		const codeLength=this.code.reduce((prev, cur)=>(prev+(cur.type!==OpCode.codeline && cur.type!==OpCode.label)),0);
+		let output=String("DISASSEMBLED VIEW - Length: "+codeLength+"\n");
 		let asm="";
 		for (let eip=0;eip<this.code.length;eip++){
 			let opcode=this.code[eip];
@@ -885,14 +880,11 @@ class Program {
 				case OpCode.todouble:
 					asm+="todouble "+this.linkToEnglish(opcode.obj0);
 					break;
+				case OpCode.tobool:
+					asm+="tobool "+this.linkToEnglish(opcode.obj0);
+					break;
 				case OpCode.len:
 					asm+="len "+this.linkToEnglish(opcode.obj0);
-					break;
-				case OpCode.strcmp:
-					asm+="strcmp "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
-					break;
-				case OpCode.stricmp:
-					asm+="stricmp "+this.linkToEnglish(opcode.obj0)+", "+this.linkToEnglish(opcode.obj1);
 					break;
 				case OpCode.lcase:
 					asm+="lcase "+this.linkToEnglish(opcode.obj0);
@@ -986,7 +978,7 @@ class Program {
 			asm+="\n";
 		}
 		output+=asm;
-		output+="END DISASSEMBLED VIEW";
+		output+="END DISASSEMBLED VIEW - Length: "+codeLength;
 		return output;
 	}
 
