@@ -1,6 +1,6 @@
 let code = `
 string reportTest(string testName, bool passed){
-	print(testName+" test: "+(passed?"passed":"failed"));
+	print(testName+" test: "+(passed?"✓":"FAIL"));
 }
 
 bool testAnd(){
@@ -142,6 +142,62 @@ bool testTernary(){
 	return true;
 }
 
+bool testUnarys(){
+	if (-5!=-5) return false;
+	if (!true!=false) return false;
+	if (!(!true==false)) return false;
+	if (?null==true) return false;
+	if (!?null==false) return false;
+	if (?"hi"==false) return false;
+	return true;
+}
+
+bool testConversions(){
+	if (string(500)!="500") return false;
+	if (string(123456.789, 2)!="123456.79") return false;
+	if (string(true)!="true") return false;
+	if (string(false)!="false") return false;
+	if (double("0123.4")!=123.4) return false;
+	if (double("-.456")!=-.456) return false;
+	if (double(true)!=1) return false;
+	if (double(false)!=0) return false;
+	if (bool("gsfg5dfg")!=true) return false;
+	if (bool("")!=false) return false;
+	if (bool(100) != true) return false;
+	if (bool(0) != false) return false;
+	return true;
+}
+
+bool testStd(){
+	if (ceil(0.3) != 1) return false;
+	if (ceil(100.7) != 101) return false;
+	if (ceil(-0.3) != 0) return false;
+	if (ceil(-100.7) != -100 ) return false;
+	if (floor(0.3) != 0) return false;
+	if (floor(100.7) != 100) return false;
+	if (floor(-0.3) != -1) return false;
+	if (floor(-100.7) != -101 ) return false;
+	if (abs(100) != 100) return false;
+	if (abs(-100) != 100) return false;
+	if (min(100, -100) != -100) return false;
+	if (min(-100, 100) != -100) return false;
+	if (max(100, -100) != 100) return false;
+	if (max(-100, 100) != 100) return false;
+	if (clamp(-200, -100, 100) != -100) return false;
+	if (clamp(200, -100, 100) != 100) return false;
+	if (len("123"+"456") != 6) return false;
+	if (len("") != 0) return false;
+	if (trim("  234 ")!="234") return false;
+	if (ucase("aBcD")!="ABCD") return false;
+	if (lcase("AbCd")!="abcd") return false;
+	if (substr("123456", 1, 2) !="23") return false;
+	if (substr("123456", -2, 1) !="5") return false;
+	return true;
+}
+
+reportTest("Std", testStd());
+reportTest("Conversions", testConversions());
+reportTest("Unary", testUnarys());
 reportTest("?:", testTernary());
 reportTest(">=", testAE());
 reportTest(">", testA());

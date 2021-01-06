@@ -480,30 +480,54 @@ class Parser {
 			case TokenType.Len:
 				this.match(TokenType.Len);
 				this.match(TokenType.LeftParen);
+				this.matchType(this.doExpression(), IdentityType.String);
+				this.program.addLen( Program.unlinkedReg("eax") );
 				this.match(TokenType.RightParen);
 				return IdentityType.Double;
 
 			case TokenType.SubStr:
 				this.match(TokenType.SubStr);
 				this.match(TokenType.LeftParen);
+				this.matchType(this.doExpression(), IdentityType.String);
+		
+				this.program.addPush( Program.unlinkedReg("eax") );
+		
+				this.match(TokenType.Comma);
+				this.matchType(this.doExpression(), IdentityType.Double);
+		
+				this.program.addPush( Program.unlinkedReg("eax") );
+		
+				this.match(TokenType.Comma);
+				this.matchType(this.doExpression(), IdentityType.Double);
+
+				this.program.addMov( Program.unlinkedReg("ecx"), Program.unlinkedReg("eax") );
+				this.program.addPop( Program.unlinkedReg("ebx") );
+				this.program.addPop( Program.unlinkedReg("eax") );
+				this.program.addSubStr( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx"), Program.unlinkedReg("ecx") );
 				this.match(TokenType.RightParen);
 				return IdentityType.String;
 
 			case TokenType.Trim:
 				this.match(TokenType.Trim);
 				this.match(TokenType.LeftParen);
+				this.matchType(this.doExpression(), IdentityType.String);
+				this.program.addTrim( Program.unlinkedReg("eax") );
 				this.match(TokenType.RightParen);
 				return IdentityType.String;
 
 			case TokenType.LCase:
 				this.match(TokenType.LCase);
 				this.match(TokenType.LeftParen);
+				this.matchType(this.doExpression(), IdentityType.String);
+				this.program.addLCase( Program.unlinkedReg("eax") );
 				this.match(TokenType.RightParen);
 				return IdentityType.String;
 
 			case TokenType.UCase:
 				this.match(TokenType.UCase);
 				this.match(TokenType.LeftParen);
+				this.matchType(this.doExpression(), IdentityType.String);
+				this.program.addUCase( Program.unlinkedReg("eax") );
 				this.match(TokenType.RightParen);
 				return IdentityType.String;
 
