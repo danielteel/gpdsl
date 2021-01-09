@@ -390,6 +390,7 @@ class Program {
 
 	execute(externals){
 		let eip = 0;
+		let trace=[];
 		try {
 			const link = (obj) => this.linkedObject(obj, scopes);
 
@@ -421,10 +422,12 @@ class Program {
 						this.eax.setTo(externals[opcode.id]( () => stack.pop() ));
 						break;
 					case OpCode.call:
+						trace.push({debugName: opcode.debugName, address: opcode.id});
 						callStack.push(eip+1);
 						eip=opcode.id;
 						continue;
 					case OpCode.ret:
+						trace.pop();
 						eip=callStack.pop();
 						continue;
 
@@ -714,7 +717,11 @@ class Program {
 
 			return new BoolObj(null, true, true);
 		} catch (error) {
-			throw Error("Execution error at address "+eip+": "+error.message);
+			let callTraceMsg="\n";
+			for (let callData of trace.reverse()){
+				callTraceMsg+="\tat "+callData.debugName+" address: "+callData.address+"\n";
+			}
+			throw Error("Execution error at address "+eip+": "+error.message+"\n"+callTraceMsg);
 		}
 	}
 

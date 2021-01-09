@@ -1,6 +1,21 @@
 let code = `
+string failedTests="";
+double failedTestCount=0;
 string reportTest(string testName, bool passed){
+	if (!passed) {
+		failedTests=failedTests+testName+" ";
+		failedTestCount=failedTestCount+1;
+	}
 	print(testName+" test: "+(passed?"✓":"FAIL"));
+}
+string testDone(){
+	print("--------");
+	if (failedTestCount){
+		print("Tests that failed: "+trim(string(failedTests)));
+		print(string(failedTestCount)+" test(s) failed.");
+	}else{
+		print("All tests passed.");
+	}
 }
 
 bool testAnd(){
@@ -16,7 +31,7 @@ bool testAnd(){
 	if (!(true && true)) return false;
 	if (false && called()) return false;//short circuit, shouldnt call called()
 	if (calledTimes!=0) return false;
-	if (called() && false) return false;//short circuit, should call called()
+	if (!(true && called())) return false;//short circuit, should call called()
 	if (calledTimes!=1) return false;
 	return true;
 }
@@ -124,13 +139,15 @@ bool testE(){
 	if (1==2) return false;
 	return true;
 }
+
 bool testNE(){
-	if (!("HI"=="HI")) return false;
-	if ("abc"=="ABC") return false;
-	if (!(true==true)) return false;
-	if (!(false==false)) return false;
-	if (!(10==10)) return false;
-	if (1==2) return false;
+	if ("HI"!="HI") return false;
+	if (!("abc"!="ABC")) return false;
+	if (true!=true) return false;
+	if (false!=false) return false;
+	if (!(false!=true)) return false;
+	if (10!=10) return false;
+	if (!(1!=2)) return false;
 	return true;
 }
 
@@ -139,6 +156,13 @@ bool testTernary(){
 	if (false?true:false) return false;
 	if (!(false?false:true)) return false;
 	if (!(true?true:false)) return false;
+	string name="Bob";
+	if ((
+		name=="Jeff"	?	"Yo Jeff!"	:
+		name=="Bob"		?	"Hi Bob!"	:
+		name=="Dan"		?	"Hello Dan!":
+							"Go away stranger!"
+		)!="Hi Bob!") return false;
 	return true;
 }
 
@@ -195,6 +219,138 @@ bool testStd(){
 	return true;
 }
 
+string scopeTestVar="top level scope";
+bool testScopes(){
+	string scopeTestVar="What";
+	string nestedFunc(string scopeTestVar){
+		string b(string scopeTestVar){
+			return lcase(scopeTestVar);
+		}
+		return b(scopeTestVar)+b(scopeTestVar);
+	}
+	for (string scopeTestVar="0";double(scopeTestVar)<double("8");scopeTestVar=string(double(scopeTestVar)+1)){
+		if (nestedFunc(scopeTestVar)!=scopeTestVar+scopeTestVar) return false;
+	}
+	
+	if (scopeTestVar!="What") return false;
+	return true;
+}
+
+bool testForLoop(){
+	double loopCount=0;
+	for (double i=-10;i<=10;i=i+1){
+		loopCount=loopCount+1;
+	}
+	if (loopCount!=21) return false;
+
+	double i;
+	for (i=0;i<10;i=i+2);
+	if (i!=10) return false;
+
+	i=0;
+	for (;;){
+		i=i+1;
+		break;
+	}
+	if (i!=1) return false;
+
+	bool breakItAll=false;
+	for (double x=-50; x<=50; x=x+10){
+		for (double y=-50; y<=50; y=y+10){
+			i=i+1;
+			double getSame(double a){
+				return a+1;
+			}
+			if (getSame(i)==100){
+				breakItAll=true;
+				break;
+			}
+		}
+		if (breakItAll) break;
+	}
+	if (i!=99 || breakItAll==false) return false;
+
+	return true;
+}
+
+bool testLoop(){
+	double i=0;
+	loop {
+		i=i+1;
+	} while (false)
+	if (i!=1) return false;
+
+	i=0;
+	loop {
+		i=i+1;
+		if (i==10) break;
+	} while (true);
+	if (i!=10) return false;
+
+	i=0;
+	loop {
+		i=i+1;
+	} while (i<10)
+	if (i!=10) return false;
+
+	i=0;
+	loop {
+		loop {
+			i=i+1;
+		} while (false)
+	} while (false)
+	if (i!=1) return false;
+
+	return true;
+}
+
+bool testWhile(){
+	double i=-50;
+	while (i<100) i=i+1;
+	if (i!=100) return false;
+
+	i=0;
+	while (true){
+		i=i+1;
+		if (i==100) break;
+	}
+	if (i!=100) return false;
+
+	i=0;
+	double calledCount=0;
+	while (i<101){
+		double addTwo(double i){
+			calledCount=calledCount+1;
+			return i+2;
+		}
+		while (i<50) i=addTwo(i);
+		while (i<100) {
+			i=addTwo(i);
+		}
+		i=i+1;
+	}
+	if (i!=101 || calledCount!=50) return false;
+
+	return true;
+}
+
+
+bool testRecursive(){
+	double doRecursion(double number){
+		number=number-1;
+		if (number>0) number=doRecursion(number);
+		return number;
+	}
+	if (doRecursion(100)!=0) return false;
+	return true;
+}
+
+reportTest("Recursive test", testRecursive() );
+
+reportTest("While loop", testWhile());
+reportTest("Loop while", testLoop());
+reportTest("For loop", testForLoop());
+reportTest("Scope", testScopes());
 reportTest("Std", testStd());
 reportTest("Conversions", testConversions());
 reportTest("Unary", testUnarys());
@@ -213,6 +369,7 @@ reportTest("Mul", testMultiply());
 reportTest("Div", testDivide());
 reportTest("Mod", testMod());
 reportTest("Exp", testExponentiation());
+testDone();
 `;
 
 const {Interpreter, StringObj, NumberObj, BoolObj} = require('./Interpreter');
@@ -229,7 +386,7 @@ let interpreter=new Interpreter();
 let thisObj = new NumberObj("this", 123456, true);
 let imports = [thisObj, Interpreter.funcDef("print", print, "bool", "string")];
 
-let retObj = interpreter.runCode( code, true, ...imports );
+let retObj = interpreter.runCode( code, false, ...imports );
 
 if (retObj.error){
 	if (retObj.disassembled){

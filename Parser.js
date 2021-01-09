@@ -842,20 +842,7 @@ class Parser {
 		this.match(TokenType.LeftParen);//							(
 
 		if (this.token?.type!==TokenType.LineDelim){//				[allocate || init]
-			switch (this.token.type){
-				case TokenType.Bool:
-					this.doBool();
-					break;
-				case TokenType.Double:
-					this.doDouble();
-					break;
-				 case TokenType.String:
-					 this.doString();
-					 break;
-				default:
-					this.doAssignment(); 
-					break;
-			}
+			this.doAssignOrDeclare(true);
 		}else{
 			this.match(TokenType.LineDelim);//						;
 		}
@@ -936,10 +923,23 @@ class Parser {
 		}else{
 			this.program.addExit( Program.unlinkedNull() );
 		}
-		return this.match(TokenType.LineDelim);
+		this.match(TokenType.LineDelim);
 	}
 	
-	doDeclare(){
+	doAssignOrDeclare(cantBeFunction=false){
+		switch (this.token.type){
+			case TokenType.Bool:
+			case TokenType.Double:
+			case TokenType.String:
+				 this.doDeclare(cantBeFunction);
+				 break;
+			default:
+				this.doAssignment(true); 
+				break;
+		}
+	}
+
+	doDeclare(cantBeFunction=false){
 		let declareType=null;
 		switch (this.token?.type){
 			case TokenType.Double:
@@ -962,7 +962,7 @@ class Parser {
 			let varName = this.token?.value;
 			this.match(TokenType.Ident);
 
-			if (isFirstOne && this.token?.type===TokenType.LeftParen){
+			if (cantBeFunction===false && isFirstOne && this.token?.type===TokenType.LeftParen){
 				this.doFunction(varName, declareType);
 				return;
 			}else{

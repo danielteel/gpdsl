@@ -1,20 +1,14 @@
-const {Utils} = require('./Utils');
-const {OpObjType, OpObj, RegisterObj, StringObj, NumberObj, BoolObj, Machine}=require('./OpObjs');
-
+const {StringObj, NumberObj, BoolObj}=require('./OpObjs');
 const Tokenizer = require('./Tokenizer');
 const {Parser, IdentityType} = require('./Parser');
-const {Program} = require('./Program');
 
 
 class Interpreter {
 
 	static funcDef(name, func, returnType, ...params){
-		let builtDef={};
+		let builtDef={name, func, type: IdentityType.Function};
 
-		builtDef.name=name;
-		builtDef.func=func;
 		builtDef.params=[];
-		builtDef.type=IdentityType.Function;
 
 		let type=returnType.toLowerCase().trim();
 		switch (type){
