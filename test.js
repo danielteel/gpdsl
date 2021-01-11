@@ -1,4 +1,6 @@
 let code = `
+print("Hi");
+time();
 string failedTests="";
 double failedTestCount=0;
 string reportTest(string testName, bool passed){
@@ -342,11 +344,20 @@ bool testRecursive(){
 		return number;
 	}
 	if (doRecursion(100)!=0) return false;
+
+	double fib(double n) {
+		if (n < 2) return n;
+		return fib(n - 1) + fib(n - 2); 
+	}
+	double startTime=time();
+	if (fib(20)!=6765) return false;
+	double fibTime=time()-startTime;
+	print("Fib 20 time: "+string(fibTime)+"ms");
 	return true;
 }
 
+double startTime=time();
 reportTest("Recursive test", testRecursive() );
-
 reportTest("While loop", testWhile());
 reportTest("Loop while", testLoop());
 reportTest("For loop", testForLoop());
@@ -369,6 +380,8 @@ reportTest("Mul", testMultiply());
 reportTest("Div", testDivide());
 reportTest("Mod", testMod());
 reportTest("Exp", testExponentiation());
+
+print("Testing time = "+string(time()-startTime)+"ms");
 testDone();
 `;
 
@@ -382,11 +395,16 @@ const print = (popFn) => {
 		return new BoolObj(null, false, false);
 }
 
-let interpreter=new Interpreter();
-let thisObj = new NumberObj("this", 123456, true);
-let imports = [thisObj, Interpreter.funcDef("print", print, "bool", "string")];
+const time = (popFn) => {
+	return new NumberObj(null, new Date().getTime(), false);
+}
 
-let retObj = interpreter.runCode( code, false, ...imports );
+let interpreter=new Interpreter();
+const printFn = Interpreter.funcDef("print", print, "bool", "string");
+const timeFn = Interpreter.funcDef("time", time, "double");
+let imports = [timeFn, printFn];
+
+let retObj = interpreter.runCode( code, true, ...imports );
 
 if (retObj.error){
 	if (retObj.disassembled){

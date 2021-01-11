@@ -725,57 +725,57 @@ class Program {
 		}
 	}
 
-	addRet			()						{ return this.code.push( {type: OpCode.ret} )-1; }
-	addLabel		(id)					{ return this.code.push( {type: OpCode.label,		id: id} )-1; }
-	addJmp			(id)					{ return this.code.push( {type: OpCode.jmp,			id: id} )-1; }
-	addJE			(id)					{ return this.code.push( {type: OpCode.je,			id: id} )-1; }
-	addJNE			(id)					{ return this.code.push( {type: OpCode.jne,			id: id} )-1; }
-	addScopeDepth	(size)					{ return this.code.push( {type: OpCode.scopedepth,	size: size} )-1; }
-	addTest			(obj0)					{ return this.code.push( {type: OpCode.test,		obj0: obj0} )-1; }
-	addSE			(obj0)					{ return this.code.push( {type: OpCode.se,			obj0: obj0} )-1; }
-	addSNE			(obj0)					{ return this.code.push( {type: OpCode.sne,			obj0: obj0} )-1; }
-	addSA			(obj0)					{ return this.code.push( {type: OpCode.sa,			obj0: obj0} )-1; }
-	addSAE			(obj0)					{ return this.code.push( {type: OpCode.sae,			obj0: obj0} )-1; }
-	addSB			(obj0)					{ return this.code.push( {type: OpCode.sb,			obj0: obj0} )-1; }
-	addSBE			(obj0)					{ return this.code.push( {type: OpCode.sbe,			obj0: obj0} )-1; }
-	addExit			(obj0)					{ return this.code.push( {type: OpCode.exit,		obj0: obj0} )-1; }
-	addCeil			(obj0)					{ return this.code.push( {type: OpCode.ceil,		obj0: obj0} )-1; }
-	addFloor		(obj0)					{ return this.code.push( {type: OpCode.floor,		obj0: obj0} )-1; }
-	addAbs			(obj0)					{ return this.code.push( {type: OpCode.abs,			obj0: obj0} )-1; }
-	addToDouble		(obj0)					{ return this.code.push( {type: OpCode.todouble,	obj0: obj0} )-1; }
-	addToBool		(obj0)					{ return this.code.push( {type: OpCode.tobool,		obj0: obj0} )-1; }
-	addLen			(obj0)					{ return this.code.push( {type: OpCode.len,			obj0: obj0} )-1; }
-	addLCase		(obj0)					{ return this.code.push( {type: OpCode.lcase,		obj0: obj0} )-1; }
-	addUCase		(obj0)					{ return this.code.push( {type: OpCode.ucase,		obj0: obj0} )-1; }
-	addTrim			(obj0)					{ return this.code.push( {type: OpCode.trim,		obj0: obj0} )-1; }
-	addDouble		(obj0)					{ return this.code.push( {type: OpCode.double,		obj0: obj0} )-1; }
-	addBool			(obj0)					{ return this.code.push( {type: OpCode.bool,		obj0: obj0} )-1; }
-	addString		(obj0)					{ return this.code.push( {type: OpCode.string,		obj0: obj0} )-1; }
-	addPush			(obj0)					{ return this.code.push( {type: OpCode.push,		obj0: obj0} )-1; }
-	addPop			(obj0)					{ return this.code.push( {type: OpCode.pop,			obj0: obj0} )-1; }
-	addNot			(obj0)					{ return this.code.push( {type: OpCode.not,			obj0: obj0} )-1; }
-	addNeg			(obj0)					{ return this.code.push( {type: OpCode.neg,			obj0: obj0} )-1; }
-	addCodeLine		(code)					{ return this.code.push( {type: OpCode.codeline,	code: code} )-1; }
-	addPopScope		(scope)					{ return this.code.push( {type: OpCode.popscope,	scope: scope} )-1; }
-	addToString		(obj0, obj1)			{ return this.code.push( {type: OpCode.tostring,	obj0: obj0, obj1: obj1} )-1; }
-	addCmp			(obj0, obj1)			{ return this.code.push( {type: OpCode.cmp,			obj0: obj0, obj1: obj1} )-1; }
-	addConcat		(obj0, obj1)			{ return this.code.push( {type: OpCode.concat,		obj0: obj0, obj1: obj1} )-1; }
-	addMin			(obj0, obj1)			{ return this.code.push( {type: OpCode.min,			obj0: obj0, obj1: obj1} )-1; }
-	addMax			(obj0, obj1)			{ return this.code.push( {type: OpCode.max,			obj0: obj0, obj1: obj1} )-1; }
-	addMov			(obj0, obj1)			{ return this.code.push( {type: OpCode.mov,			obj0: obj0, obj1: obj1} )-1; }
-	addAnd			(obj0, obj1)			{ return this.code.push( {type: OpCode.and,			obj0: obj0, obj1: obj1} )-1; }
-	addOr			(obj0, obj1)			{ return this.code.push( {type: OpCode.or,			obj0: obj0, obj1: obj1} )-1; }
-	addAdd			(obj0, obj1)			{ return this.code.push( {type: OpCode.add,			obj0: obj0, obj1: obj1} )-1; }
-	addSub			(obj0, obj1)			{ return this.code.push( {type: OpCode.sub,			obj0: obj0, obj1: obj1} )-1; }
-	addMul			(obj0, obj1)			{ return this.code.push( {type: OpCode.mul,			obj0: obj0, obj1: obj1} )-1; }
-	addDiv			(obj0, obj1)			{ return this.code.push( {type: OpCode.div,			obj0: obj0, obj1: obj1} )-1; }
-	addMod			(obj0, obj1)			{ return this.code.push( {type: OpCode.mod,			obj0: obj0, obj1: obj1} )-1; }
-	addExponent		(obj0, obj1)			{ return this.code.push( {type: OpCode.exponent,	obj0: obj0, obj1: obj1} )-1; }
-	addPushScope	(scope, size)			{ return this.code.push( {type: OpCode.pushscope,	scope: scope, size: size} )-1; }
-	addCall			(id, debugName)			{ return this.code.push( {type: OpCode.call,		id: id, debugName: debugName} )-1; }
-	addExCall		(id, debugName)			{ return this.code.push( {type: OpCode.excall,		id: id, debugName: debugName} )-1; }
-	addSubStr		(obj0, obj1, obj2)		{ return this.code.push( {type: OpCode.substr,		obj0: obj0, obj1: obj1, obj2: obj2} )-1; }
-	addClamp		(obj0, obj1, obj2)		{ return this.code.push( {type: OpCode.clamp,		obj0: obj0, obj1: obj1, obj2: obj2} )-1; }
+	addRet			(dontInsert=false)						{ const op={type: OpCode.ret};return dontInsert?op:this.code.push( op )-1; }
+	addLabel		(id,dontInsert=false)					{ const op={type: OpCode.label,		id: id};return dontInsert?op:this.code.push( op )-1; }
+	addJmp			(id,dontInsert=false)					{ const op={type: OpCode.jmp,		id: id};return dontInsert?op:this.code.push( op )-1; }
+	addJE			(id,dontInsert=false)					{ const op={type: OpCode.je,		id: id};return dontInsert?op:this.code.push( op )-1; }
+	addJNE			(id,dontInsert=false)					{ const op={type: OpCode.jne,		id: id};return dontInsert?op:this.code.push( op )-1; }
+	addScopeDepth	(size,dontInsert=false)					{ const op={type: OpCode.scopedepth,size: size};return dontInsert?op:this.code.push( op )-1; }
+	addTest			(obj0,dontInsert=false)					{ const op={type: OpCode.test,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addSE			(obj0,dontInsert=false)					{ const op={type: OpCode.se,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addSNE			(obj0,dontInsert=false)					{ const op={type: OpCode.sne,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addSA			(obj0,dontInsert=false)					{ const op={type: OpCode.sa,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addSAE			(obj0,dontInsert=false)					{ const op={type: OpCode.sae,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addSB			(obj0,dontInsert=false)					{ const op={type: OpCode.sb,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addSBE			(obj0,dontInsert=false)					{ const op={type: OpCode.sbe,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addExit			(obj0,dontInsert=false)					{ const op={type: OpCode.exit,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addCeil			(obj0,dontInsert=false)					{ const op={type: OpCode.ceil,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addFloor		(obj0,dontInsert=false)					{ const op={type: OpCode.floor,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addAbs			(obj0,dontInsert=false)					{ const op={type: OpCode.abs,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addToDouble		(obj0,dontInsert=false)					{ const op={type: OpCode.todouble,	obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addToBool		(obj0,dontInsert=false)					{ const op={type: OpCode.tobool,	obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addLen			(obj0,dontInsert=false)					{ const op={type: OpCode.len,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addLCase		(obj0,dontInsert=false)					{ const op={type: OpCode.lcase,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addUCase		(obj0,dontInsert=false)					{ const op={type: OpCode.ucase,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addTrim			(obj0,dontInsert=false)					{ const op={type: OpCode.trim,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addDouble		(obj0,dontInsert=false)					{ const op={type: OpCode.double,	obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addBool			(obj0,dontInsert=false)					{ const op={type: OpCode.bool,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addString		(obj0,dontInsert=false)					{ const op={type: OpCode.string,	obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addPush			(obj0,dontInsert=false)					{ const op={type: OpCode.push,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addPop			(obj0,dontInsert=false)					{ const op={type: OpCode.pop,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addNot			(obj0,dontInsert=false)					{ const op={type: OpCode.not,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addNeg			(obj0,dontInsert=false)					{ const op={type: OpCode.neg,		obj0: obj0};return dontInsert?op:this.code.push( op )-1; }
+	addCodeLine		(code,dontInsert=false)					{ const op={type: OpCode.codeline,	code: code};return dontInsert?op:this.code.push( op )-1; }
+	addPopScope		(scope,dontInsert=false)				{ const op={type: OpCode.popscope,	scope: scope};return dontInsert?op:this.code.push( op )-1; }
+	addToString		(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.tostring,	obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addCmp			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.cmp,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addConcat		(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.concat,	obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addMin			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.min,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addMax			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.max,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addMov			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.mov,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addAnd			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.and,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addOr			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.or,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addAdd			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.add,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addSub			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.sub,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addMul			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.mul,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addDiv			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.div,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addMod			(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.mod,		obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addExponent		(obj0, obj1,dontInsert=false)			{ const op={type: OpCode.exponent,	obj0: obj0, obj1: obj1};return dontInsert?op:this.code.push( op )-1; }
+	addPushScope	(scope, size,dontInsert=false)			{ const op={type: OpCode.pushscope,	scope: scope, size: size};return dontInsert?op:this.code.push( op )-1; }
+	addCall			(id, debugName,dontInsert=false)		{ const op={type: OpCode.call,		id: id, debugName: debugName};return dontInsert?op:this.code.push( op )-1; }
+	addExCall		(id, debugName,dontInsert=false)		{ const op={type: OpCode.excall,	id: id, debugName: debugName};return dontInsert?op:this.code.push( op )-1; }
+	addSubStr		(obj0, obj1, obj2,dontInsert=false)		{ const op={type: OpCode.substr,	obj0: obj0, obj1: obj1, obj2: obj2};return dontInsert?op:this.code.push( op )-1; }
+	addClamp		(obj0, obj1, obj2,dontInsert=false)		{ const op={type: OpCode.clamp,		obj0: obj0, obj1: obj1, obj2: obj2};return dontInsert?op:this.code.push( op )-1; }
 
 
 

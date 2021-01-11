@@ -111,7 +111,7 @@ class Parser {
 		this.program = new Program();
 
 		for (let i=0;i<externals.length;i++){
-			this.addToCurrentScope(externals[i].name, externals[i].type, null, externals[i].params, externals[i].returnType);
+			this.addToCurrentScope(externals[i].name, externals[i].type, i, externals[i].params, externals[i].returnType);
 		}
 
 		this.pushAllocScope();
@@ -275,7 +275,7 @@ class Parser {
 		this.match(TokenType.RightParen);
 
 		if (identObj.scope===0){
-			this.program.addExCall(identObj.index, "fxn "+identObj.name);
+			this.program.addExCall(identObj.branch, "fxn "+identObj.name);
 		}else{
 			this.program.addCall(identObj.branch, "fxn "+identObj.name);
 		}
