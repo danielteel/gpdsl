@@ -1,6 +1,4 @@
 let code = `
-print("Hi");
-time();
 string failedTests="";
 double failedTestCount=0;
 string reportTest(string testName, bool passed){
@@ -12,12 +10,16 @@ string reportTest(string testName, bool passed){
 }
 string testDone(){
 	print("--------");
+	string message;
 	if (failedTestCount){
 		print("Tests that failed: "+trim(string(failedTests)));
-		print(string(failedTestCount)+" test(s) failed.");
+		message=string(failedTestCount)+" test(s) failed.";
+		print(message);
 	}else{
-		print("All tests passed.");
+		message="All tests passed.";
+		print(message);
 	}
+	return message;
 }
 
 bool testAnd(){
@@ -349,10 +351,7 @@ bool testRecursive(){
 		if (n < 2) return n;
 		return fib(n - 1) + fib(n - 2); 
 	}
-	double startTime=time();
 	if (fib(20)!=6765) return false;
-	double fibTime=time()-startTime;
-	print("Fib 20 time: "+string(fibTime)+"ms");
 	return true;
 }
 
@@ -380,10 +379,10 @@ reportTest("Mul", testMultiply());
 reportTest("Div", testDivide());
 reportTest("Mod", testMod());
 reportTest("Exp", testExponentiation());
-
 print("Testing time = "+string(time()-startTime)+"ms");
-testDone();
+exit testDone();
 `;
+
 
 const {Interpreter, StringObj, NumberObj, BoolObj} = require('./Interpreter');
 

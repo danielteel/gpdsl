@@ -116,12 +116,8 @@ class Parser {
 
 		this.pushAllocScope();
 
-		const pushGlobalScopeBranch = this.newBranch();
-		const comeBackBranch = this.newBranch();
-
-		this.program.addJmp(pushGlobalScopeBranch);
-		this.program.addLabel(comeBackBranch);
-
+		const entryPoint = this.newBranch();
+		const entryPointAddress=this.program.addLabel(entryPoint);
 		this.program.addCodeLine(null);
 
 		this.doBlock(null, null, false, false, true);
@@ -129,13 +125,13 @@ class Parser {
 		this.program.addCodeLine(null);
 		
 		this.program.addExit( Program.unlinkedNull() );
-		this.program.addLabel(pushGlobalScopeBranch);
 
-		this.program.addScopeDepth(this.maxScopeDepth);
+		let mainPreamble=[];
+		mainPreamble.push(this.program.addScopeDepth(this.maxScopeDepth, true));
 		if (this.allocScope[this.allocScopeIndex]){
-			this.program.addPushScope(this.allocScopeIndex, this.allocScope[this.allocScopeIndex]);
+			mainPreamble.push(this.program.addPushScope(this.allocScopeIndex, this.allocScope[this.allocScopeIndex], true));
 		}
-		this.program.addJmp(comeBackBranch);
+		this.program.code.splice(mainPreamble+1, 0, ...mainPreamble);
 
 		this.popAllocScope();
 		return this.program;
@@ -909,7 +905,7 @@ class Parser {
 
 	doBreak(breakToBranch){
 		this.match(TokenType.Break);
-		if (breakToBranch===null || breakToBranch===undefined) this.throwError("no loop to break from.");
+		if (breakToBranch===null || breakToBranch===undefined) this.throwError("no loop to break from");
 		this.program.addJmp( breakToBranch );
 
 		this.match(TokenType.LineDelim);
@@ -999,13 +995,12 @@ class Parser {
 	doFunction(name, type){
 		const returnToBranch=this.newBranch();
 		const skipFuncBranch = this.newBranch();
-		const setupStackFrameBranch = this.newBranch();
 		const funcBlockBranch = this.newBranch();
 
 		this.program.addJmp( skipFuncBranch );
 
 		this.pushAllocScope();
-		this.program.addLabel( funcBlockBranch );
+		const funcAddress=this.program.addLabel( funcBlockBranch );
 
 		let paramTypes=[];
 		let paramIdents=[];
@@ -1038,7 +1033,7 @@ class Parser {
 		}
 		this.match(TokenType.RightParen);
 		
-		let identObj = this.addFunction(name, type, setupStackFrameBranch, paramTypes);
+		let identObj = this.addFunction(name, type, funcBlockBranch, paramTypes);
 		if (!identObj) this.throwError("failed to add function '"+name+"' to ident list");
 
 		this.pushScope();
@@ -1056,28 +1051,30 @@ class Parser {
 		this.program.addLabel( returnToBranch );
 		this.program.addPopScope( this.allocScopeIndex );
 		this.program.addRet();
-		this.program.addLabel( setupStackFrameBranch );
-		this.program.addPushScope( this.allocScopeIndex, this.allocScope[this.allocScopeIndex] );
+
+		let funcPreamble=[];
+		funcPreamble.push(this.program.addPushScope( this.allocScopeIndex, this.allocScope[this.allocScopeIndex], true ));
 
 		for (let i=paramObjs.length-1;i>=0;i--){
 			let unlinkedParam=Program.unlinkedVariable(paramObjs[i].type, paramObjs[i].scope, paramObjs[i].index, paramObjs[i].name);
 			switch (paramObjs[i].type){
 			case IdentityType.Bool:
-				this.program.addBool( unlinkedParam );
+				funcPreamble.push(this.program.addBool( unlinkedParam, true ));
 				break;
 			case IdentityType.Double:
-				this.program.addDouble( unlinkedParam );
+				funcPreamble.push(this.program.addDouble( unlinkedParam, true ));
 				break;
 			case IdentityType.String:
-				this.program.addString( unlinkedParam );
+				funcPreamble.push(this.program.addString( unlinkedParam, true ));
 				break;
 			default:
 				this.throwError("unexpected type in parameter list allocation "+paramTypes[i].toString());
 			}
-			this.program.addPop( unlinkedParam );
+			funcPreamble.push(this.program.addPop( unlinkedParam, true ));
 		}
 
-		this.program.addJmp( funcBlockBranch );
+		this.program.code.splice(funcAddress+1,0,...funcPreamble);
+
 
 		this.popAllocScope();
 		this.program.addLabel( skipFuncBranch );
@@ -1159,7 +1156,11 @@ class Parser {
 				break;
 
 			case TokenType.Return:
-				this.doReturn(returnToBranch, returnType);
+				if (returnToBranch!=null && returnToBranch!=undefined){
+					this.doReturn(returnToBranch, returnType);
+				}else{
+					this.throwError("not allowed to return outside of a function");
+				}
 				break;
 
 			case TokenType.Double:
