@@ -1,5 +1,3 @@
-const {Utils} = require("./Utils");
-
 const TokenType = {
 	LineDelim: Symbol(";"),
 	NewLine: Symbol("newline"),
@@ -92,10 +90,6 @@ function isAlpha(character){
 	return false;
 }
 
-function isAlNum(character){
-	return Utils.isAlpha(character) || Utils.isDigit(character);
-}
- 
 function isSpace(character){
 	if (character.charCodeAt(0)<=32) return true;
 	return false;

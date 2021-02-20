@@ -355,7 +355,20 @@ bool testRecursive(){
 	return true;
 }
 
+bool testVarNames(){
+	double _5(){
+		return 123;
+	}
+	
+	double a123bc_d=123;
+	if (a123bc_d!=123) return false;
+	if (_5()!=123) return false;
+
+	return true;
+}
+
 double startTime=time();
+reportTest("Variable names", testVarNames() );
 reportTest("Recursive test", testRecursive() );
 reportTest("While loop", testWhile());
 reportTest("Loop while", testLoop());
@@ -411,6 +424,5 @@ if (retObj.error){
 	}
 	console.log(retObj.error)
 }else{
-	//console.log(retObj.disassembled);
 	console.log(retObj.exitObject.objType, retObj.exitObject.value);
 }
