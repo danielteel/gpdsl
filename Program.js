@@ -267,18 +267,6 @@ class Program {
 								i--;
 								stillOptimizing=true;
 							}
-						// } else if (nxt.type===OpCode.cmp && cur.obj0.type==UnlinkedType.register && (this.unlinkedsEqual(cur.obj0, nxt.obj0) || this.unlinkedsEqual(cur.obj0, nxt.obj1))){// mov(eax, X) + cmp(eax, Y) => cmp(X, Y)
-						// 	if (this.unlinkedsEqual(cur.obj0, nxt.obj0)){ 
-						// 		nxt.obj0=cur.obj1;
-						// 		this.code.splice(i,1);
-						// 		i--;
-						// 		stillOptimizing=true;
-						// 	}else if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){	// mov(eax, X) + cmp(Y, eax) => cmp(Y, X)
-						// 		nxt.obj1=cur.obj1;
-						// 		this.code.splice(i,1);
-						// 		i--;
-						// 		stillOptimizing=true;
-						// 	}
 						} else if (this.isBOnAOp(nxt) && cur.obj0.type===UnlinkedType.register && cur.obj0.type===UnlinkedType.register){// mov(eax, X) + add(Y, eax) => add(Y, X)
 							if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
 								nxt.obj1=cur.obj1;					

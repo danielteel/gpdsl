@@ -200,8 +200,8 @@ class Tokenizer {
 			str += this.look;
 			this.getChar();
 		}
-		if (this.isNotEnd()) {
-			if (this.look !== stringTerminator) this.throwError("expected string but found end of code.");
+		if (!this.isNotEnd()) {
+			if (this.look !== stringTerminator) this.throwError("expected string terminator but found end of code.");
 		}
 		this.getChar();
 		this.addToken(TokenType.StringLiteral, str);
