@@ -74,10 +74,12 @@ class Parser {
 	getToken() {
 		if (this.isNotEnd()) {
 			this.tokenIndex++;
+			if (!this.isNotEnd()) return;
 			this.token = this.tokens[this.tokenIndex];
 			while (this.token?.type===TokenType.NewLine){
 				this.program.addCodeLine(this.token.value);
 				this.tokenIndex++;
+				if (!this.isNotEnd()) return;
 				this.token = this.tokens[this.tokenIndex];
 			}
 		}
@@ -123,7 +125,6 @@ class Parser {
 		this.doBlock(null, null, false, false, true);
 		
 		this.program.addCodeLine(null);
-		
 		this.program.addExit( Program.unlinkedNull() );
 
 		let mainPreamble=[];
@@ -131,7 +132,7 @@ class Parser {
 		if (this.allocScope[this.allocScopeIndex]){
 			mainPreamble.push(this.program.addPushScope(this.allocScopeIndex, this.allocScope[this.allocScopeIndex], true));
 		}
-		this.program.code.splice(mainPreamble+1, 0, ...mainPreamble);
+		this.program.code.splice(entryPointAddress+1, 0, ...mainPreamble);
 
 		this.popAllocScope();
 		return this.program;
@@ -384,7 +385,7 @@ class Parser {
 					this.match(TokenType.Comma);
 					this.program.addPush( Program.unlinkedReg("eax") );
 					type=this.doExpression();
-					if (this.typesDontMatch(type, IdentityType.Double)) this.typeMismatch(IdentityType.Double, type);
+					if (!this.typesDontMatch(type, IdentityType.String)) this.throwError("cannot do string:decimal conversion on a string");
 					this.program.addPop( Program.unlinkedReg("ebx") );
 					this.program.addToString( Program.unlinkedReg("ebx"), Program.unlinkedReg("eax") );
 					this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
@@ -552,8 +553,6 @@ class Parser {
 					this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
 					break;
 			}
-
-			leftType=rightType;
 		}
 
 		return leftType;
@@ -586,8 +585,6 @@ class Parser {
 					this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
 					break;
 			}
-
-			leftType=rightType;
 		}
 
 		return leftType;
@@ -624,8 +621,6 @@ class Parser {
 					this.program.addNeg( Program.unlinkedReg("eax") );
 					break;
 			}
-
-			leftType=rightType;
 		}
 
 		return leftType;
@@ -684,18 +679,15 @@ class Parser {
 			if (this.typesDontMatch(IdentityType.Bool, leftType)) this.typeMismatch(IdentityType.Bool, leftType);
 
 			let shortCircuitBranch=this.newBranch();
-			this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Bool, true) );
-			this.program.addJNE( shortCircuitBranch );
+			this.program.addTest( Program.unlinkedReg("eax") );
+			this.program.addJE( shortCircuitBranch );
 
-			this.program.addPush( Program.unlinkedReg("eax") );
 
 			this.match(TokenType.And);
 
 			let rightType=this.doCompare();
 			if (this.typesDontMatch(IdentityType.Bool, rightType)) this.typeMismatch(IdentityType.Bool, rightType);
 
-			this.program.addPop( Program.unlinkedReg("ebx") );
-			this.program.addAnd( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
 			this.program.addLabel( shortCircuitBranch );
 		}
 
@@ -709,18 +701,14 @@ class Parser {
 			if (this.typesDontMatch(IdentityType.Bool, leftType)) this.typeMismatch(IdentityType.Bool, leftType);
 
 			let shortCircuitBranch=this.newBranch();
-			this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Bool, true) );
-			this.program.addJE( shortCircuitBranch );
+			this.program.addTest( Program.unlinkedReg("eax") );
+			this.program.addJNE( shortCircuitBranch );
 
-			this.program.addPush( Program.unlinkedReg("eax") );
-			
 			this.match(TokenType.Or);
 
 			let rightType=this.doAnd();
 			if (this.typesDontMatch(IdentityType.Bool, rightType)) this.typeMismatch(IdentityType.Bool, rightType);
 
-			this.program.addPop( Program.unlinkedReg("ebx") );
-			this.program.addOr( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
 			this.program.addLabel( shortCircuitBranch );
 		}
 
@@ -728,52 +716,40 @@ class Parser {
 	}
 
 	doExpression(){
-		let leftType=this.doOr();
-		let returnType=null;
+		let returnType=this.doOr();
 
 		while (this.isNotEnd() && this.isTernaryOp()){
-			if (this.typesDontMatch(IdentityType.Bool, leftType)) this.typeMismatch(IdentityType.Bool, leftType);
+			if (this.typesDontMatch(IdentityType.Bool, returnType)) this.typeMismatch(IdentityType.Bool, returnType);
 
-			
 			this.match(TokenType.Question);
 
 			let falseBranch=this.newBranch();
 			let doneBranch=this.newBranch();
-			this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Bool, true) );
-			this.program.addJNE( falseBranch );
+			this.program.addTest( Program.unlinkedReg("eax") );
+			this.program.addJE( falseBranch );
 
-			let trueType=this.doExpression();
-
-			if (returnType && this.typesDontMatch(returnType, trueType)) this.throwError("expected chained ternary operators to evaluate to same type");
-			if (!returnType) returnType=trueType;
+			returnType=this.doExpression();
 
 			this.match(TokenType.Colon);
 
 			this.program.addJmp( doneBranch );
 			this.program.addLabel( falseBranch );
 
-			let falseType=this.doExpression();
-
-			if (this.typesDontMatch(trueType, falseType))  this.throwError("expected ternary true/false branches to evaluate to same type");
+			if (this.typesDontMatch(this.doExpression(), returnType)) this.throwError("true/false branchs of ternary need to have same type");
 
 			this.program.addLabel( doneBranch );
 		}
 
-		if (returnType){
-			return returnType;
-		}else{
-			return leftType;
-		}
+		return returnType;
 	}
 
 	doIf(breakToBranch, returnToBranch, returnType){
 		const elseLabel = this.newBranch();
 		
 		this.match(TokenType.If);
-
 		this.match(TokenType.LeftParen);
-		let type=this.doExpression();
-		if (type!==IdentityType.Bool){
+
+		if (this.doExpression()!==IdentityType.Bool){
 			this.program.addToBool( Program.unlinkedReg("eax") );
 		}
 
@@ -806,12 +782,11 @@ class Parser {
 		
 
 		this.match(TokenType.While);
+		this.match(TokenType.LeftParen);
 
 		this.program.addLabel( loopLabel );
 
-		this.match(TokenType.LeftParen);
-		let type=this.doExpression();
-		if (type!==IdentityType.Bool){
+		if (this.doExpression()!==IdentityType.Bool){
 			this.program.addToBool( Program.unlinkedReg("eax") );
 		}
 		this.program.addTest( Program.unlinkedReg("eax") );
@@ -846,8 +821,7 @@ class Parser {
 		this.program.addLabel( compareLabel );
 
 		if (this.token?.type!==TokenType.LineDelim){//				[expression]
-			let type=this.doExpression();
-			if (type!==IdentityType.Bool){
+			if (this.doExpression()!==IdentityType.Bool){
 				this.program.addToBool( Program.unlinkedReg("eax") );
 			}
 			this.program.addTest( Program.unlinkedReg("eax") );
@@ -891,8 +865,7 @@ class Parser {
 		this.match(TokenType.While);
 		this.match(TokenType.LeftParen);
 
-		let type=this.doExpression();
-		if (type!==IdentityType.Bool){
+		if (this.doExpression()!==IdentityType.Bool){
 			this.program.addToBool( Program.unlinkedReg("eax") );
 		}
 		
