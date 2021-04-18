@@ -1,4 +1,4 @@
-const {Utils, IdentityType} = require("./Utils");
+const {IdentityType} = require("./Utils");
 const TokenType=require("./Tokenizer").TokenType;
 const {Program} = require("./Program");
 
@@ -16,6 +16,8 @@ class Parser {
 
 		this.scopeIndex=0;
 		this.scopes=[[]];
+
+		this.externalsScopeIndex=0;
 
 		this.allocScope=[0];
 		this.allocScopeIndex=0;
@@ -100,6 +102,7 @@ class Parser {
 		this.tokenEndIndex=this.tokens.length;
 		this.firstToken();
 
+		this.externalsScopeIndex=0;
 
 		this.branchCounter=1;
 
@@ -155,8 +158,11 @@ class Parser {
 	addToCurrentScope(name, type, branch=null, params=null, returnType=null){
 		const alreadyExists=this.getIdentity(name, true);
 		if (alreadyExists !== null) this.throwError("Duplicate define, "+name+" already exists in current scope as "+alreadyExists.name+":"+alreadyExists.type.toString());
-		let obj={name: name, type: type, branch: branch, params: params, returnType: returnType, scope: this.allocScopeIndex, index: this.allocScope[this.allocScopeIndex]};
+		let obj={name: name, type: type, branch: branch, params: params, returnType: returnType, scope: this.allocScopeIndex, index: (this.allocScopeIndex===0) ? this.externalsScopeIndex : this.allocScope[this.allocScopeIndex]};
 		this.scopes[this.scopeIndex].push(obj);
+		if (this.allocScopeIndex===0){
+			this.externalsScopeIndex++;
+		}
 		switch (type){
 			case IdentityType.Bool:
 			case IdentityType.Double:
@@ -166,17 +172,6 @@ class Parser {
 		}
 		return obj;
 	}
-
-	getFromStringPool(string){
-		let stringIndex=this.stringPool.indexOf(string);
-		if (stringIndex<0){
-			this.stringPool.push(string);
-			stringIndex=this.stringPool.length-1;
-		}
-		return stringIndex;
-	}
-
-	
 
 	getIdentity(name, onlyInCurrentScope=false){
 		for (let i = this.scopeIndex;i>=0;i--){
@@ -1167,7 +1162,7 @@ class Parser {
 
 		if (!ifNeedsCurlys && !this.isNotEnd()) return;//End of the program, and we're not expecting a closing '}'
 
-		if (ifNeedsCurlys || this.token?.type===TokenType.LeftCurly){
+		if (ifNeedsCurlys){
 			this.match(TokenType.LeftCurly);
 			hasCurlys=true;
 		}  

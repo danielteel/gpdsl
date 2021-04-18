@@ -183,12 +183,8 @@ class Tokenizer {
 
 		if (num.length===1 && hasDec){
 			this.addToken(TokenType.Dot);
-
-		} else if (num.length>0){
+		} else {
 			this.addToken(TokenType.DoubleLiteral, Number(num));
-
-		}else{
-			this.throwError("expected number but found '"+this.look+"'");
 		}
 	}
 

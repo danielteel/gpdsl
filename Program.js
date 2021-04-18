@@ -774,7 +774,7 @@ class Program {
 			case UnlinkedType.register:
 				return " "+obj.debugName;
 			case UnlinkedType.variable:
-				return " _"+obj.debugName;
+				return " _"+obj.debugName+"  ;"+obj.scope+":"+obj.index;
 			case UnlinkedType.literal:
 				return obj.value.toString();
 			case UnlinkedType.null:
