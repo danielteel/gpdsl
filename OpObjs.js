@@ -332,15 +332,10 @@ class StringObj extends OpObj {
 	}
 
 	equalTo(obj){
-		let type=obj._objType;
-		if (type===OpObjType.register) type=obj._curValType;
-
-		if (obj._value===null && this._value!==null) return false;
-		if (this._value===null && obj._value!==null) return false;
+		let type=obj._objType===OpObjType.register?obj._curValType:obj._objType;
 
 		switch (type){
 			case OpObjType.null:
-				return this._value===null;
 			case OpObjType.string:
 				return this._value===obj._value;
 			default:

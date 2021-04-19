@@ -37,8 +37,7 @@ class Parser {
 		}else{
 			errorLine=this.tokens[this.tokens.length-1].line;//Probably ran to the end of the token buffer, so just grab the last code line
 		}
-		let error=new Error("Parser error on line "+errorLine+": "+message);
-		throw error;
+		throw new Error("Parser error on line "+errorLine+": "+message);
 	}
 
 	symbolToString(sym){
@@ -115,8 +114,10 @@ class Parser {
 
 		this.program = new Program();
 
-		for (let i=0;i<externals.length;i++){
-			this.addToCurrentScope(externals[i].name, externals[i].type, i, externals[i].params, externals[i].returnType);
+		if (externals && externals.length>0){
+			for (let i=0;i<externals.length;i++){
+				this.addToCurrentScope(externals[i].name, externals[i].type, i, externals[i].params, externals[i].returnType);
+			}
 		}
 
 		this.pushAllocScope();

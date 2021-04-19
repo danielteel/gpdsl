@@ -1,4 +1,3 @@
-
 const {Interpreter, StringObj, NumberObj, BoolObj} = require('../Interpreter');
 const testCode=require('./testCode');
 
@@ -32,6 +31,7 @@ describe("Interpreter",()=>{
 	let interpreter;
 	beforeEach(()=>{
 		interpreter=new Interpreter();
+		consoleStream="";
 	})
 
 	it("Passes runtime tests without optimization",()=>{
@@ -49,6 +49,9 @@ describe("Interpreter",()=>{
 		let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted];
 		let retObj = interpreter.runCode( testCode, true, false, ...imports );
 
+		if (!consoleStream.includes("All tests passed.")){
+			console.log(consoleStream);
+		}
 		expect(retObj.error).toEqual(undefined);
 		expect(consoleStream.includes("All tests passed.")).toEqual(true);
 	})

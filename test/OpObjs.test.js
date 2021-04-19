@@ -63,6 +63,9 @@ describe("RegisterObj",()=>{
     it("getCopy",()=>{
         const regObj = new RegisterObj("heyyy");
         expect(regObj.getCopy()).toEqual(new RegisterObj("heyyyCopy"));
+
+        regObj.setTo(new StringObj(null,"Yolo"));
+        expect(regObj.getCopy(true)).toEqual(new StringObj(null, "Yolo"));
     })
 
     it("seTo/getNativeObj",()=>{
@@ -170,10 +173,10 @@ describe("BoolObj",()=>{
         }).toThrow();
         expect(() => {
             (new BoolObj(null, null, false)).setTo("not valid");//setting to invalid type (needs to be an OpObj)
-        }).toThrow("Tried to set bool to invalid type");
+        }).toThrow();
         expect(() => {
             (new BoolObj(null, null, false)).setTo(new StringObj());//setting to invalid type (needs to be an OpObj)
-        }).toThrow("Tried to set bool to invalid type.");
+        }).toThrow();
 
         const boolObj = new BoolObj();
 
@@ -208,7 +211,7 @@ describe("BoolObj",()=>{
 
         const regObj = new RegisterObj(null);
         boolObj.setTo(regObj);
-        expect(boolObj.equalTo(new NullObj())).toEqual(true);
+        expect(boolObj.equalTo(new RegisterObj(null))).toEqual(true);
 
         expect(()=>boolObj.equalTo("bad type")).toThrow();
     })
@@ -276,5 +279,187 @@ describe("BoolObj",()=>{
 
         expect(boolObj.greaterOrEqualThan(new NumberObj(null, 1))).toEqual(false);
         expect(boolObj.greaterOrEqualThan(new NumberObj(null, 0))).toEqual(true);
+    })
+})
+
+
+
+describe("NumberObj",()=>{
+    it("getCopy",()=>{
+        const numberObj = new NumberObj();
+        expect(numberObj.getCopy()).toEqual(numberObj);
+    })
+
+    it("setTo",()=>{
+        expect(() => {
+            (new NumberObj(null, null, true)).setTo(new NumberObj(null, false));//writing to constant
+        }).toThrow();
+        expect(() => {
+            (new NumberObj(null, null, false)).setTo("not valid");//setting to invalid type (needs to be an OpObj)
+        }).toThrow();
+        expect(() => {
+            (new NumberObj(null, null, false)).setTo(new StringObj());//setting to invalid type (needs to be an OpObj)
+        }).toThrow();
+
+        const numberObj = new NumberObj();
+
+        const regObj = new RegisterObj();
+        regObj.setTo(new NumberObj(null, 100, false));
+
+        numberObj.setTo(regObj);
+        expect(numberObj.value).toEqual(100);
+
+        numberObj.setTo(new NullObj());
+        expect(numberObj.value).toEqual(null);
+
+        numberObj.setTo(new NumberObj(null, 123));
+        expect(numberObj.value).toEqual(123);
+
+        numberObj.setTo(new BoolObj(null, true));
+        expect(numberObj.value).toEqual(1);
+
+        numberObj.setTo(new BoolObj(null, null));
+        expect(numberObj.value).toEqual(null);
+
+        numberObj.setTo(new NumberObj(null, Infinity));
+        expect(numberObj.value).toEqual(null);
+    })
+
+    it("equalTo",()=>{
+        const numberObj = new NumberObj(null, null);
+        const n1 = new NumberObj(null, 1);
+
+        expect(numberObj.equalTo(new NullObj())).toEqual(true);
+        expect(numberObj.equalTo(n1)).toEqual(false);
+
+        numberObj.setTo(n1);
+        expect(numberObj.equalTo(new NullObj())).toEqual(false);
+
+        expect(numberObj.equalTo(new NullObj())).toEqual(false);
+        expect(numberObj.equalTo(new BoolObj(null, true))).toEqual(true);
+        expect( () => numberObj.equalTo(new StringObj(null, "asd")) ).toThrow();
+    })
+
+    it("notEqualTo",()=>{
+        const numberObj = new NumberObj(null, 1);
+        expect(numberObj.notEqualTo(new BoolObj(null, true))).toEqual(false);
+        expect( () => numberObj.notEqualTo(new StringObj(null, "asd")) ).toThrow();
+    })
+
+    it("smallerThan",()=>{
+        const numberObj = new NumberObj(null, 0);
+        const regObj=new RegisterObj();
+        regObj.setTo(new NumberObj(null, -10));
+        expect(numberObj.smallerThan(new NumberObj(null, 10))).toEqual(true);
+        expect(numberObj.smallerThan(regObj)).toEqual(false);
+        expect(numberObj.smallerThan(new BoolObj(null, true))).toEqual(true);
+        expect(numberObj.smallerThan(new BoolObj(null, false))).toEqual(false);
+        expect( () => numberObj.smallerThan(new StringObj(null, "asd")) ).toThrow();
+    })
+
+    it("greaterThan",()=>{
+        const numberObj = new NumberObj(null, 0);
+        const regObj=new RegisterObj();
+        regObj.setTo(new NumberObj(null, -10));
+        expect(numberObj.greaterThan(new NumberObj(null, 10))).toEqual(false);
+        expect(numberObj.greaterThan(regObj)).toEqual(true);
+        expect(numberObj.greaterThan(new BoolObj(null, true))).toEqual(false);
+        expect(numberObj.greaterThan(new BoolObj(null, false))).toEqual(false);
+        expect( () => numberObj.greaterThan(new StringObj(null, "asd")) ).toThrow();
+    })
+
+    it("smallerOrEqualThan",()=>{
+        const numberObj = new NumberObj(null, 0);
+        const regObj=new RegisterObj();
+        regObj.setTo(new NumberObj(null, -10));
+        expect(numberObj.smallerOrEqualThan(new NumberObj(null, 10))).toEqual(true);
+        expect(numberObj.smallerOrEqualThan(regObj)).toEqual(false);
+        expect(numberObj.smallerOrEqualThan(new BoolObj(null, true))).toEqual(true);
+        expect(numberObj.smallerOrEqualThan(new BoolObj(null, false))).toEqual(true);
+        expect( () => numberObj.smallerOrEqualThan(new StringObj(null, "asd")) ).toThrow();
+    })
+
+    it("greaterOrEqualThan",()=>{
+        const numberObj = new NumberObj(null, 0);
+        const regObj=new RegisterObj();
+        regObj.setTo(new NumberObj(null, -10));
+        expect(numberObj.greaterOrEqualThan(new NumberObj(null, 10))).toEqual(false);
+        expect(numberObj.greaterOrEqualThan(regObj)).toEqual(true);
+        expect(numberObj.greaterOrEqualThan(new BoolObj(null, true))).toEqual(false);
+        expect(numberObj.greaterOrEqualThan(new BoolObj(null, false))).toEqual(true);
+        expect( () => numberObj.greaterOrEqualThan(new StringObj(null, "asd")) ).toThrow();
+    })
+})
+
+
+describe("StringObj",()=>{
+    it("getCopy",()=>{
+        const stringObj = new StringObj();
+        expect(stringObj.getCopy()).toEqual(stringObj);
+    })
+
+    it("setTo",()=>{
+        expect(() => {
+            (new StringObj(null, null, true)).setTo(new StringObj(null, "asd"));//writing to constant
+        }).toThrow();
+        expect(() => {
+            (new StringObj(null, null, false)).setTo("not valid");//setting to invalid type (needs to be an OpObj)
+        }).toThrow();
+        expect(() => {
+            (new StringObj(null, null, false)).setTo(new NumberObj());//setting to invalid type (needs to be an OpObj)
+        }).toThrow();
+
+        const stringObj = new StringObj();
+
+        stringObj.setTo(new StringObj(null, "yolo swaggins"));
+        expect(stringObj.value).toEqual("yolo swaggins");
+
+        stringObj.setTo(new NullObj());
+        expect(stringObj.value).toEqual(null);
+
+        const regObj = new RegisterObj();
+        regObj.setTo(new StringObj(null,"asd"));
+        stringObj.setTo(regObj);
+        expect(stringObj.value).toEqual("asd");
+    })
+
+    it("equalTo",()=>{
+        const stringObj = new StringObj();
+        const regObj = new RegisterObj();
+
+        regObj.setTo(new StringObj(null,"Im a register"));
+        expect(stringObj.equalTo(regObj)).toEqual(false);
+
+        stringObj.setTo(regObj);
+        expect(stringObj.equalTo(regObj)).toEqual(true);
+
+        expect(stringObj.equalTo(new NullObj())).toEqual(false);
+        stringObj.setTo(new NullObj());
+        expect(stringObj.equalTo(new NullObj())).toEqual(true);
+
+        expect(()=>stringObj.equalTo(new NumberObj(null, 1))).toThrow();
+    })
+
+    it("notEqualTo",()=>{
+        const stringObj = new StringObj(null,"oloy");
+        
+        expect(stringObj.notEqualTo(new StringObj(null,"yolo"))).toEqual(true);
+        expect(stringObj.notEqualTo(new StringObj(null,"oloy"))).toEqual(false);
+    })
+
+    it("smallerThan",()=>{
+        expect(() => (new StringObj()).smallerThan(new StringObj())).toThrow();
+    })
+
+    it("greaterThan",()=>{
+        expect(() => (new StringObj()).greaterThan(new StringObj())).toThrow();
+    })
+
+    it("smallerOrEqualThan",()=>{
+        expect(() => (new StringObj()).smallerOrEqualThan(new StringObj())).toThrow();
+    })
+
+    it("greaterOrEqualThan",()=>{
+        expect(() => (new StringObj()).greaterOrEqualThan(new StringObj())).toThrow();
     })
 })
