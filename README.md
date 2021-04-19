@@ -2,4 +2,6 @@
 
 This is an interpreter for an unnamed scripting language developed for use in another project.
 
-To see it in action, clone down and "node test.js", this will run the tests for various parts of the language. I've yet to incorporate intentionally failing tests, but its on my todo list.
+To see it in action, clone down, npm install, and npm test. Interpreter.test.js shows how this library would be used.
+
+[![Node.js CI](https://github.com/danielteel/Interpreter/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/danielteel/Interpreter/actions/workflows/node.js.yml)
