@@ -2454,7 +2454,7 @@ class Program {
 					case OpCode.cmp:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						flag_e=obj0.eqaulTo(obj1);
+						flag_e=obj0.equalTo(obj1);
 						if (((obj0.objType===OpObjType.register &amp;&amp; obj0._curValType===OpObjType.num) || obj0.objType===OpObjType.num) &amp;&amp;
 							((obj1.objType===OpObjType.register &amp;&amp; obj1._curValType===OpObjType.num) || <span class="branch-5 cbranch-no" title="branch not covered" >obj1.objType===OpObjType.num)</span>){
 								

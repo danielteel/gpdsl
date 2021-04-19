@@ -83,8 +83,8 @@ class RegisterObj extends OpObj {
 		}
 	}
 
-	eqaulTo(obj){
-		return this.getNativeObj().eqaulTo(obj);
+	equalTo(obj){
+		return this.getNativeObj().equalTo(obj);
 	}
 	notEqualTo(obj){
 		return this.getNativeObj().notEqualTo(obj);
@@ -115,12 +115,12 @@ class NullObj extends OpObj {
 		throw new Error("tried to write to null");
 	}
 
-	eqaulTo(obj){
+	equalTo(obj){
 		if (obj._value !== null) return false;
 		return true;
 	}
 	notEqualTo(obj){
-		return !this.eqaulTo(obj);
+		return !this.equalTo(obj);
 	}
 	smallerThan(obj){
 		return false;
@@ -129,10 +129,10 @@ class NullObj extends OpObj {
 		return false;
 	}
 	smallerOrEqualThan(obj){
-		return this.eqaulTo(obj);
+		return this.equalTo(obj);
 	}
 	greaterOrEqualThan(obj){
-		return this.eqaulTo(obj);
+		return this.equalTo(obj);
 	}
 }
 
@@ -163,12 +163,12 @@ class BoolObj extends OpObj {
 			this._value=obj._value===null ? null : Boolean(obj._value);
 			break;
 		default:
-			throw new Error("Tried to set bool to invalid type");
+			throw new Error("Tried to set bool to invalid type.");
 		}
 		
 		return null;
 	}
-	eqaulTo(obj){
+	equalTo(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
 
@@ -184,7 +184,7 @@ class BoolObj extends OpObj {
 		}
 	}    
 	notEqualTo(obj){
-		return !this.eqaulTo(obj);
+		return !this.equalTo(obj);
 	}
 	smallerThan(obj){
 		let type=obj._objType;
@@ -211,10 +211,10 @@ class BoolObj extends OpObj {
 		}
 	}
 	smallerOrEqualThan(obj){
-		return this.smallerThan(obj)||this.eqaulTo(obj);
+		return this.smallerThan(obj)||this.equalTo(obj);
 	}
 	greaterOrEqualThan(obj){
-		return this.greaterThan(obj)||this.eqaulTo(obj);
+		return this.greaterThan(obj)||this.equalTo(obj);
 	}
 }
 
@@ -250,7 +250,7 @@ class NumberObj extends OpObj {
 		if (!isFinite(this._value)) this._value=null;
 		return null;
 	}
-	eqaulTo(obj){
+	equalTo(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
 
@@ -268,7 +268,7 @@ class NumberObj extends OpObj {
 		}
 	}    
 	notEqualTo(obj){
-		return !this.eqaulTo(obj);
+		return !this.equalTo(obj);
 	}
 	smallerThan(obj){
 		let type=obj._objType;
@@ -295,10 +295,10 @@ class NumberObj extends OpObj {
 		}
 	}
 	smallerOrEqualThan(obj){
-		return this.smallerThan(obj)||this.eqaulTo(obj);
+		return this.smallerThan(obj)||this.equalTo(obj);
 	}
 	greaterOrEqualThan(obj){
-		return this.greaterThan(obj)||this.eqaulTo(obj);
+		return this.greaterThan(obj)||this.equalTo(obj);
 	}
 }
 
@@ -331,7 +331,7 @@ class StringObj extends OpObj {
 		return null;
 	}
 
-	eqaulTo(obj){
+	equalTo(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
 
@@ -348,7 +348,7 @@ class StringObj extends OpObj {
 		}
 	}
 	notEqualTo(obj){
-		return !this.eqaulTo(obj);
+		return !this.equalTo(obj);
 	}
 	smallerThan(obj){
 		throw new Error("Tried to do invalid comparison");

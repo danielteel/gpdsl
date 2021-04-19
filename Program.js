@@ -431,7 +431,7 @@ class Program {
 					case OpCode.cmp:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
-						flag_e=obj0.eqaulTo(obj1);
+						flag_e=obj0.equalTo(obj1);
 						if (((obj0.objType===OpObjType.register && obj0._curValType===OpObjType.num) || obj0.objType===OpObjType.num) &&
 							((obj1.objType===OpObjType.register && obj1._curValType===OpObjType.num) || obj1.objType===OpObjType.num)){
 								

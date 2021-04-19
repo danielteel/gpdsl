@@ -874,8 +874,8 @@ class RegisterObj extends OpObj {
 		}
 	}
 &nbsp;
-	eqaulTo(obj){
-		return this.getNativeObj().eqaulTo(obj);
+	equalTo(obj){
+		return this.getNativeObj().equalTo(obj);
 	}
 <span class="fstat-no" title="function not covered" >	no</span>tEqualTo(obj){
 <span class="cstat-no" title="statement not covered" >		return this.getNativeObj().notEqualTo(obj);</span>
@@ -906,12 +906,12 @@ class NullObj extends OpObj {
 <span class="cstat-no" title="statement not covered" >		throw new Error("tried to write to null");</span>
 	}
 &nbsp;
-	eqaulTo(obj){
+	equalTo(obj){
 		<span class="missing-if-branch" title="if path not taken" >I</span>if (obj._value !== null) <span class="cstat-no" title="statement not covered" >return false;</span>
 		return true;
 	}
 <span class="fstat-no" title="function not covered" >	no</span>tEqualTo(obj){
-<span class="cstat-no" title="statement not covered" >		return !this.eqaulTo(obj);</span>
+<span class="cstat-no" title="statement not covered" >		return !this.equalTo(obj);</span>
 	}
 <span class="fstat-no" title="function not covered" >	sm</span>allerThan(obj){
 <span class="cstat-no" title="statement not covered" >		return false;</span>
@@ -959,7 +959,7 @@ class BoolObj extends OpObj {
 		
 		return null;
 	}
-	eqaulTo(obj){
+	equalTo(obj){
 		let type=obj._objType;
 		<span class="missing-if-branch" title="else path not taken" >E</span>if (type===OpObjType.register) type=obj._curValType;
 &nbsp;
@@ -975,7 +975,7 @@ class BoolObj extends OpObj {
 		}
 	}    
 <span class="fstat-no" title="function not covered" >	no</span>tEqualTo(obj){
-<span class="cstat-no" title="statement not covered" >		return !this.eqaulTo(obj);</span>
+<span class="cstat-no" title="statement not covered" >		return !this.equalTo(obj);</span>
 	}
 <span class="fstat-no" title="function not covered" >	sm</span>allerThan(obj){
 		let type=<span class="cstat-no" title="statement not covered" >obj._objType;</span>
@@ -1002,10 +1002,10 @@ class BoolObj extends OpObj {
 		}
 	}
 <span class="fstat-no" title="function not covered" >	sm</span>allerOrEqualThan(obj){
-<span class="cstat-no" title="statement not covered" >		return this.smallerThan(obj)||this.eqaulTo(obj);</span>
+<span class="cstat-no" title="statement not covered" >		return this.smallerThan(obj)||this.equalTo(obj);</span>
 	}
 <span class="fstat-no" title="function not covered" >	gr</span>eaterOrEqualThan(obj){
-<span class="cstat-no" title="statement not covered" >		return this.greaterThan(obj)||this.eqaulTo(obj);</span>
+<span class="cstat-no" title="statement not covered" >		return this.greaterThan(obj)||this.equalTo(obj);</span>
 	}
 }
 &nbsp;
@@ -1041,7 +1041,7 @@ class NumberObj extends OpObj {
 		<span class="missing-if-branch" title="if path not taken" >I</span>if (!isFinite(this._value)) <span class="cstat-no" title="statement not covered" >this._value=null;</span>
 		return null;
 	}
-	eqaulTo(obj){
+	equalTo(obj){
 		let type=obj._objType;
 		<span class="missing-if-branch" title="else path not taken" >E</span>if (type===OpObjType.register) type=obj._curValType;
 &nbsp;
@@ -1059,7 +1059,7 @@ class NumberObj extends OpObj {
 		}
 	}    
 <span class="fstat-no" title="function not covered" >	no</span>tEqualTo(obj){
-<span class="cstat-no" title="statement not covered" >		return !this.eqaulTo(obj);</span>
+<span class="cstat-no" title="statement not covered" >		return !this.equalTo(obj);</span>
 	}
 	smallerThan(obj){
 		let type=obj._objType;
@@ -1086,10 +1086,10 @@ class NumberObj extends OpObj {
 		}
 	}
 <span class="fstat-no" title="function not covered" >	sm</span>allerOrEqualThan(obj){
-<span class="cstat-no" title="statement not covered" >		return this.smallerThan(obj)||this.eqaulTo(obj);</span>
+<span class="cstat-no" title="statement not covered" >		return this.smallerThan(obj)||this.equalTo(obj);</span>
 	}
 <span class="fstat-no" title="function not covered" >	gr</span>eaterOrEqualThan(obj){
-<span class="cstat-no" title="statement not covered" >		return this.greaterThan(obj)||this.eqaulTo(obj);</span>
+<span class="cstat-no" title="statement not covered" >		return this.greaterThan(obj)||this.equalTo(obj);</span>
 	}
 }
 &nbsp;
@@ -1122,7 +1122,7 @@ class StringObj extends OpObj {
 		return null;
 	}
 &nbsp;
-	eqaulTo(obj){
+	equalTo(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
 &nbsp;
@@ -1139,7 +1139,7 @@ class StringObj extends OpObj {
 		}
 	}
 <span class="fstat-no" title="function not covered" >	no</span>tEqualTo(obj){
-<span class="cstat-no" title="statement not covered" >		return !this.eqaulTo(obj);</span>
+<span class="cstat-no" title="statement not covered" >		return !this.equalTo(obj);</span>
 	}
 <span class="fstat-no" title="function not covered" >	sm</span>allerThan(obj){
 <span class="cstat-no" title="statement not covered" >		throw new Error("Tried to do invalid comparison");</span>

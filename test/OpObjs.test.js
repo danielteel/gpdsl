@@ -30,9 +30,9 @@ describe("NullObj",()=>{
           }).toThrow();
     })
 
-    it("eqaulTo",()=>{
-        expect((new NullObj()).eqaulTo(new NullObj())).toEqual(true);
-        expect((new NullObj()).eqaulTo(new NumberObj("asd", 100, false))).toEqual(false);
+    it("equalTo",()=>{
+        expect((new NullObj()).equalTo(new NullObj())).toEqual(true);
+        expect((new NullObj()).equalTo(new NumberObj("asd", 100, false))).toEqual(false);
     })
 
     it("notEqualTo",()=>{
@@ -82,6 +82,11 @@ describe("RegisterObj",()=>{
         ebx.setTo(new NumberObj(null, 500));
         eax.setTo(ebx);
         expect(eax.getNativeObj()).toEqual(ebx.getNativeObj());
+
+        expect( () => {
+            const regObj = new RegisterObj();
+            regObj.setTo("IM NOT A VALID VALUE!!");
+        }).toThrow();
     })
 
     it("getNativeObj",()=>{
@@ -104,8 +109,8 @@ describe("RegisterObj",()=>{
         const regObj = new RegisterObj("heyyy");
     
         regObj.setTo(new StringObj(null,"Jim"));
-        expect(regObj.eqaulTo(new StringObj(null, "Jim"))).toEqual(true);
-        expect(regObj.eqaulTo(new StringObj(null, "miJ"))).toEqual(false);
+        expect(regObj.equalTo(new StringObj(null, "Jim"))).toEqual(true);
+        expect(regObj.equalTo(new StringObj(null, "miJ"))).toEqual(false);
     })
 
     it("notEqualTo",()=>{
@@ -153,3 +158,123 @@ describe("RegisterObj",()=>{
     })
 })
 
+describe("BoolObj",()=>{
+    it("getCopy",()=>{
+        const boolObj = new BoolObj();
+        expect(boolObj.getCopy()).toEqual(boolObj);
+    })
+
+    it("setTo",()=>{
+        expect(() => {
+            (new BoolObj(null, null, true)).setTo(new BoolObj(null, false));//writing to constant
+        }).toThrow();
+        expect(() => {
+            (new BoolObj(null, null, false)).setTo("not valid");//setting to invalid type (needs to be an OpObj)
+        }).toThrow("Tried to set bool to invalid type");
+        expect(() => {
+            (new BoolObj(null, null, false)).setTo(new StringObj());//setting to invalid type (needs to be an OpObj)
+        }).toThrow("Tried to set bool to invalid type.");
+
+        const boolObj = new BoolObj();
+
+        const regObj = new RegisterObj();
+        regObj.setTo(new BoolObj(null, true, false));
+
+        boolObj.setTo(regObj);
+        expect(boolObj.value).toEqual(true);
+
+        boolObj.setTo(new NullObj());
+        expect(boolObj.value).toEqual(null);
+
+        boolObj.setTo(new NumberObj(null, 1));
+        expect(boolObj.value).toEqual(true);
+
+        boolObj.setTo(new BoolObj(null, false));
+        expect(boolObj.value).toEqual(false);
+    })
+
+    it("equalTo",()=>{
+        const boolObj = new BoolObj(null, true);
+        
+        expect(boolObj.equalTo(new BoolObj(null, true))).toEqual(true);
+        expect(boolObj.equalTo(new BoolObj(null, false))).toEqual(false);
+
+        expect(boolObj.equalTo(new NumberObj(null, 0))).toEqual(false);
+        expect(boolObj.equalTo(new NumberObj(null, 1))).toEqual(true);
+
+        expect(boolObj.equalTo(new NullObj())).toEqual(false);
+        boolObj.setTo(new BoolObj(null, null));
+        expect(boolObj.equalTo(new NullObj())).toEqual(true);
+
+        const regObj = new RegisterObj(null);
+        boolObj.setTo(regObj);
+        expect(boolObj.equalTo(new NullObj())).toEqual(true);
+
+        expect(()=>boolObj.equalTo("bad type")).toThrow();
+    })
+
+    it("notEqualTo",()=>{
+        const boolObj = new BoolObj(null, true);
+    
+        expect(boolObj.notEqualTo(new BoolObj(null, true))).not.toEqual(true);
+        expect(boolObj.notEqualTo(new BoolObj(null, false))).not.toEqual(false);
+
+        expect(boolObj.notEqualTo(new NumberObj(null, 0))).not.toEqual(false);
+        expect(boolObj.notEqualTo(new NumberObj(null, 1))).not.toEqual(true);
+
+        expect(boolObj.notEqualTo(new NullObj())).not.toEqual(false);
+        boolObj.setTo(new BoolObj(null, null));
+        expect(boolObj.notEqualTo(new NullObj())).not.toEqual(true);
+
+
+        expect(()=>boolObj.notEqualTo("bad type")).toThrow();
+    })
+
+    it("smallerThan",()=>{
+        const boolObj = new BoolObj(null, false);
+    
+        expect(boolObj.smallerThan(new BoolObj(null, true))).toEqual(true);
+        expect(boolObj.smallerThan(new BoolObj(null, false))).toEqual(false);
+
+        expect(boolObj.smallerThan(new NumberObj(null, 1))).toEqual(true);
+        expect(boolObj.smallerThan(new NumberObj(null, 0))).toEqual(false);
+
+        const regObj = new RegisterObj();
+        regObj.setTo(new NullObj());
+        expect(()=>boolObj.smallerThan(regObj)).toThrow();
+    })
+
+    it("greaterThan",()=>{
+        const boolObj = new BoolObj(null, true);
+    
+        expect(boolObj.greaterThan(new BoolObj(null, true))).toEqual(false);
+        expect(boolObj.greaterThan(new BoolObj(null, false))).toEqual(true);
+
+        expect(boolObj.greaterThan(new NumberObj(null, 1))).toEqual(false);
+        expect(boolObj.greaterThan(new NumberObj(null, 0))).toEqual(true);
+
+        const regObj = new RegisterObj();
+        regObj.setTo(new NullObj());
+        expect(()=>boolObj.greaterThan(regObj)).toThrow();
+    })
+
+    it("smallerOrEqualThan",()=>{
+        const boolObj = new BoolObj(null, true);
+    
+        expect(boolObj.smallerOrEqualThan(new BoolObj(null, true))).toEqual(true);
+        expect(boolObj.smallerOrEqualThan(new BoolObj(null, false))).toEqual(false);
+
+        expect(boolObj.smallerOrEqualThan(new NumberObj(null, 1))).toEqual(true);
+        expect(boolObj.smallerOrEqualThan(new NumberObj(null, 0))).toEqual(false);
+    })
+
+    it("greaterOrEqualThan",()=>{
+        const boolObj = new BoolObj(null, false);
+    
+        expect(boolObj.greaterOrEqualThan(new BoolObj(null, true))).toEqual(false);
+        expect(boolObj.greaterOrEqualThan(new BoolObj(null, false))).toEqual(true);
+
+        expect(boolObj.greaterOrEqualThan(new NumberObj(null, 1))).toEqual(false);
+        expect(boolObj.greaterOrEqualThan(new NumberObj(null, 0))).toEqual(true);
+    })
+})
