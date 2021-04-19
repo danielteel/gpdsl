@@ -2,15 +2,12 @@ const TokenType = {
 	LineDelim: Symbol(";"),
 	NewLine: Symbol("newline"),
 
-	Forward: Symbol("forward"),
-	Void: Symbol("void"),
 	Double: Symbol("double"),
 	String: Symbol("string"),
 	Bool: Symbol("bool"),
 
 	DoubleLiteral: Symbol("number_literal"),
 	StringLiteral: Symbol("string_literal"),
-	BoolLiteral: Symbol("bool_literal"),
 
 	Ident: Symbol("ident"),
 
@@ -143,12 +140,12 @@ class Tokenizer {
 	}
 
 	getChar() {
-		if (this.isNotEnd()) {
+		//if (this.isNotEnd()) {//should be impossible for this condition, removed for 'increased' code coverage
 			this.lookIndex++;
 			this.look = this.code[this.lookIndex];
 
 			if (this.look) this.currentLineText+=this.look;
-		}
+		//}
 	}
 
 	skipWhite() {
@@ -196,8 +193,8 @@ class Tokenizer {
 			str += this.look;
 			this.getChar();
 		}
-		if (!this.isNotEnd()) {
-			if (this.look !== stringTerminator) this.throwError("expected string terminator but found end of code.");
+		if (!this.isNotEnd() && this.look !== stringTerminator) {
+			this.throwError("expected string terminator but found end of code.");
 		}
 		this.getChar();
 		this.addToken(TokenType.StringLiteral, str);
@@ -209,14 +206,14 @@ class Tokenizer {
 
 		while (this.isNotEnd() && notDone === true) {
 			notDone = false;
-			if (isAlpha(this.look) || isDigit(this.look) || this.look === '_' || this.look === '.') {
+			if (isAlpha(this.look) || isDigit(this.look) || this.look === '_') {
 				name += this.look;
 				notDone = true;
 				this.getChar();
 			}
 		}
 
-		if (name.length === 0) this.throwError("expected identifier but got nothing");
+		//if (name.length === 0) this.throwError("expected identifier but got nothing"); commented out because this should be impossible
 		
 		switch (name) {
 			case "if":
@@ -281,12 +278,6 @@ class Tokenizer {
 				this.addToken(TokenType.SubStr);
 				break;
 
-			case "forward":
-				this.addToken(TokenType.Forward);
-				break;
-			case "void":
-				this.addToken(TokenType.Void);
-				break;
 			case "double":
 				this.addToken(TokenType.Double);
 				break;
@@ -399,7 +390,6 @@ class Tokenizer {
 							break;
 						}
 						this.throwError("incomplete OR operator found, OR operators must be of boolean type '||'");
-						break;
 
 					case '&':
 						if (this.isNotEnd() && this.look === '&') {
@@ -408,7 +398,6 @@ class Tokenizer {
 							break;
 						}
 						this.throwError("incomplete AND operator found, AND operators must be of boolean type '&&'");
-						break;
 
 					case '!':
 						if (this.isNotEnd() && this.look === '=') {

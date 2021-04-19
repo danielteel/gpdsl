@@ -318,7 +318,7 @@ class Parser {
 				this.match(TokenType.Question);
 				type=this.doFactor();
 				this.program.addCmp( Program.unlinkedReg("eax"), Program.unlinkedNull() );
-				this.program.addSNE( Program.unlinkedReg("eax") );
+				this.program.addSE( Program.unlinkedReg("eax") );
 				return IdentityType.Bool;
 
 			case TokenType.LeftParen:

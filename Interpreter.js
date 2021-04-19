@@ -45,14 +45,14 @@ class Interpreter {
 		return builtDef;
 	}
 
-	runCode(code, optimize, ...externals){
+	runCode(code, optimize, wantsDisassembled, ...externals){
 		let disassembled="";
 		try {
 
 			//Build the external parsing list and execution list
 			const parserExternList=[];
 			const executeExternList=[];
-			if (externals){
+			if (externals && externals.length>0){
 				for (let i=0;i<externals.length;i++){
 					if (externals[i] instanceof StringObj){
 						parserExternList.push({name: externals[i].name, type: IdentityType.String});
@@ -82,17 +82,16 @@ class Interpreter {
 			program.link(optimize);
 
 			//Grab the disassembled byte code for debugging
-			disassembled = program.getDebugOutput();
+			if (wantsDisassembled){
+				disassembled = program.getDebugOutput();
+			}
 
 			//Execute the byte code
 			let exitObject=program.execute(executeExternList);
 
 			return {exitObject: exitObject, disassembled: disassembled};
 		} catch (error){
-			if (disassembled){
-				return {error: error, disassembled};
-			}
-			return {error: error};
+			return {error: error, disassembled};
 		}
 	}
 }

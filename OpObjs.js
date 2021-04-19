@@ -56,7 +56,7 @@ class RegisterObj extends OpObj {
 	}
 
 	setTo(obj){
-		if (obj instanceof OpObj === false) return "Tried to set register to invalid type";
+		if (obj instanceof OpObj === false) throw new Error("Tried to set register to invalid type");
 
 		if (obj._objType===OpObjType.register){
 			this._curValType=obj._curValType;
@@ -129,10 +129,10 @@ class NullObj extends OpObj {
 		return false;
 	}
 	smallerOrEqualThan(obj){
-		return false;
+		return this.eqaulTo(obj);
 	}
 	greaterOrEqualThan(obj){
-		return false;
+		return this.eqaulTo(obj);
 	}
 }
 
@@ -146,8 +146,8 @@ class BoolObj extends OpObj {
 	}
 
 	setTo(obj){
-		if (this._isConstant) return "Tried to write to constant bool";
-		if (obj instanceof OpObj === false) return "Tried to set bool to invalid type";
+		if (this._isConstant) throw new Error("Tried to write to constant bool");
+		if (obj instanceof OpObj === false) throw new Error("Tried to set bool to invalid type");
 		
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
@@ -163,7 +163,7 @@ class BoolObj extends OpObj {
 			this._value=obj._value===null ? null : Boolean(obj._value);
 			break;
 		default:
-			return "Tried to set bool to invalid type";
+			throw new Error("Tried to set bool to invalid type");
 		}
 		
 		return null;
@@ -228,8 +228,8 @@ class NumberObj extends OpObj {
 	}
 
 	setTo(obj){
-		if (this._isConstant) return "Tried to write to constant number";
-		if (obj instanceof OpObj === false) return "Tried to set number to invalid type";
+		if (this._isConstant) throw new Error("Tried to write to constant number");
+		if (obj instanceof OpObj === false) throw new Error("Tried to set number to invalid type");
 		
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
@@ -245,7 +245,7 @@ class NumberObj extends OpObj {
 				this._value=obj._value;
 				break;
 			default:
-				return "Tried to set number to invalid type";
+				throw new Error("Tried to set number to invalid type");
 		}
 		if (!isFinite(this._value)) this._value=null;
 		return null;
@@ -312,8 +312,8 @@ class StringObj extends OpObj {
 	}
 
 	setTo(obj){
-		if (this._isConstant) return "Tried to write to constant string";
-		if (obj instanceof OpObj === false) return "Tried to set string to invalid type";
+		if (this._isConstant) throw new Error("Tried to write to constant string");
+		if (obj instanceof OpObj === false) throw new Error("Tried to set string to invalid type");
 		
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
@@ -326,7 +326,7 @@ class StringObj extends OpObj {
 				this._value=obj._value;
 				break;
 			default:
-				return "Tried to set string to invalid type";
+				throw new Error("Tried to set string to invalid type");
 		}
 		return null;
 	}
