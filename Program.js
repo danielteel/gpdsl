@@ -980,4 +980,4 @@ class Program {
 }
 
 
-module.exports={Program};
+module.exports={Program, OpCode, UnlinkedType};
