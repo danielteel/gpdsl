@@ -81,7 +81,7 @@ class Program {
 				case "ebx":	return {type: UnlinkedType.register, register: Program.regSymbols.ebx, debugName:"ebx"}
 				case "ecx":	return {type: UnlinkedType.register, register: Program.regSymbols.ecx, debugName:"ecx"}
 		}
-		return null;
+		this.otherError("no register with the name "+registerName+" exists");
 	}
 	static unlinkedVariable(type, scope, index, debugName=null)	{ return {type: UnlinkedType.variable,	identType: type,	scope, index, debugName}; }
 	static unlinkedLiteral(type, value)							{ return {type: UnlinkedType.literal,	literalType: type,	value}; }
@@ -256,17 +256,7 @@ class Program {
 							this.code.splice(i,1);
 							i--;
 							stillOptimizing=true;
-						}else if (this.isBOnAOp(nxt) && nxtnxt?.type===OpCode.mov && // MOV BONA MOV => BONA
-										nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register &&
-										this.unlinkedsEqual(cur.obj0, nxt.obj0) && this.unlinkedsEqual(cur.obj0, nxtnxt.obj1)){
 
-							if (this.unlinkedsEqual(cur.obj1, nxtnxt.obj0)){
-								nxt.obj0=cur.obj1;
-								this.code.splice(i,1);
-								this.code.splice(i+1,1);
-								i--;
-								stillOptimizing=true;
-							}
 						} else if (this.isBOnAOp(nxt) && cur.obj0.type===UnlinkedType.register && cur.obj0.type===UnlinkedType.register){// mov(eax, X) + add(Y, eax) => add(Y, X)
 							if (this.unlinkedsEqual(cur.obj0, nxt.obj1)){
 								nxt.obj1=cur.obj1;					
@@ -403,9 +393,6 @@ class Program {
 				let obj1=null;
 				let obj2=null;
 				switch (opcode.type){
-					case OpCode.label:
-						break;
-
 					case OpCode.excall:
 						this.eax.setTo(externals[opcode.id]( () => stack.pop() ));
 						break;

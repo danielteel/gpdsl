@@ -96,7 +96,7 @@ class Parser {
 		}
 	}
 	
-	parse(externals){
+	parse(optimize, externals){
 		
 		this.tokenEndIndex=this.tokens.length;
 		this.firstToken();
@@ -139,6 +139,10 @@ class Parser {
 		this.program.code.splice(entryPointAddress+1, 0, ...mainPreamble);
 
 		this.popAllocScope();
+		
+		//Link and optionally optimize the byte code
+		this.program.link(optimize);
+
 		return this.program;
 	}
 	

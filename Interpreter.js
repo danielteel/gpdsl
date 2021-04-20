@@ -76,10 +76,7 @@ class Interpreter {
 
 			//Parse and generate byte code
 			let parser=new Parser(tokenList);
-			const program=parser.parse(parserExternList);
-
-			//Link and optionally optimize the byte code
-			program.link(optimize);
+			const program=parser.parse(optimize, parserExternList);
 
 			//Grab the disassembled byte code for debugging
 			if (wantsDisassembled){
