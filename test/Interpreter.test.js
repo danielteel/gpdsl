@@ -26,6 +26,7 @@ const negFn = Interpreter.funcDef("neg", neg, "double", "double");
 const authorName = new StringObj("authorName", "Dan Teel", true);
 const publicationYear = new NumberObj("publicationYear", 2020, true);
 const isInterpreted = new BoolObj("isInterpreted", true, true);
+const numberOfTestsPassed = new NumberObj("numberOfTestsPassed", 0, false);
 
 describe("Interpreter",()=>{
 	let interpreter;
@@ -35,7 +36,7 @@ describe("Interpreter",()=>{
 	})
 
 	it("Passes runtime tests without optimization",()=>{
-		let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted];
+		let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted, numberOfTestsPassed];
 		let retObj = interpreter.runCode( testCode, false, false, ...imports );
 
 		if (!consoleStream.includes("All tests passed.")){
@@ -46,7 +47,7 @@ describe("Interpreter",()=>{
 	})
 
 	it("Passes runtime tests with optimization",()=>{
-		let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted];
+		let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted, numberOfTestsPassed];
 		let retObj = interpreter.runCode( testCode, true, false, ...imports );
 
 		if (!consoleStream.includes("All tests passed.")){

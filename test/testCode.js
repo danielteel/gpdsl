@@ -1,10 +1,14 @@
 module.exports = `
 string failedTests="";
 double failedTestCount=0;
+numberOfTestsPassed=0;
+
 string reportTest(string testName, bool passed){
 	if (!passed) {
 		failedTests=failedTests+testName+" ";
 		failedTestCount=failedTestCount+1;
+	}else{
+		numberOfTestsPassed=numberOfTestsPassed+1;
 	}
 	print(testName+" test: "+(passed?"✓":"FAIL"));
 }
