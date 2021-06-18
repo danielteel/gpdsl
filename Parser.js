@@ -53,7 +53,7 @@ class Parser {
 	}
 
 	typesDontMatch(a, b, strict=false){
-		return !(a===b || (a===IdentityType.Null || b===IdentityType.Null && strict===false));
+		return !(a===b || ((a===IdentityType.Null || b===IdentityType.Null) && strict===false));
 	}
 
 	match(type) {
@@ -894,7 +894,7 @@ class Parser {
 		if (this.token?.type !== TokenType.LineDelim){
 			const exitType=this.doExpression();
 			if (this.expectedExitType){
-				this.matchType(exitType, this.expectedExitType, true);
+				this.matchType(exitType, this.expectedExitType);
 			}
 			this.program.addExit( Program.unlinkedReg("eax") );
 		}else{
