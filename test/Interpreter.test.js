@@ -37,7 +37,7 @@ describe("Interpreter",()=>{
 
 	it("Passes runtime tests without optimization",()=>{
 		let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted, numberOfTestsPassed];
-		let retObj = interpreter.runCode( testCode, false, false, ...imports );
+		let retObj = interpreter.runCode(testCode, null, false, false, ...imports );
 
 		if (!consoleStream.includes("All tests passed.")){
 			console.log(consoleStream);
@@ -48,7 +48,7 @@ describe("Interpreter",()=>{
 
 	it("Passes runtime tests with optimization",()=>{
 		let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted, numberOfTestsPassed];
-		let retObj = interpreter.runCode( testCode, true, false, ...imports );
+		let retObj = interpreter.runCode( testCode, null, true, false, ...imports );
 
 		if (!consoleStream.includes("All tests passed.")){
 			console.log(consoleStream);
@@ -63,7 +63,7 @@ describe("Interpreter",()=>{
 		let numberImport = new NumberObj("numberImport", 123, false);
 
 		const code=`boolImport=!boolImport; stringImport=lcase(stringImport); numberImport=numberImport+100;`;
-		let retObj = interpreter.runCode(code, true, false, boolImport, stringImport, numberImport);
+		let retObj = interpreter.runCode(code, null, true, false, boolImport, stringImport, numberImport);
 		expect(retObj.error).toEqual(undefined);
 
 		expect(boolImport.value).toEqual(true);
@@ -76,13 +76,13 @@ describe("Interpreter",()=>{
 		let stringImport = new StringObj("stringImport","ALL CAPS", true);
 		let numberImport = new NumberObj("numberImport", 123, true);
 
-		let retObj = interpreter.runCode('boolImport=false;', true, false, boolImport);
+		let retObj = interpreter.runCode('boolImport=false;', null, true, false, boolImport);
 		expect(retObj.error).not.toEqual(undefined);
 
-		retObj = interpreter.runCode('stringImport="yolo";', true, false, stringImport);
+		retObj = interpreter.runCode('stringImport="yolo";', null, true, false, stringImport);
 		expect(retObj.error).not.toEqual(undefined);
 
-		retObj = interpreter.runCode('numberImport=534;', true, false, numberImport);
+		retObj = interpreter.runCode('numberImport=534;', null, true, false, numberImport);
 		expect(retObj.error).not.toEqual(undefined);
 	})
 
@@ -102,14 +102,14 @@ describe("Interpreter",()=>{
 	})
 
 	it("Doenst fail test code with no externals",()=>{
-		let retObj = interpreter.runCode('double a=1;exit a;', true, false);
+		let retObj = interpreter.runCode('double a=1;exit a;', null, true, false);
 		expect(retObj.error).toEqual(undefined);
 		expect(retObj.exitObject.value).toEqual(1);
 	})
 
 	it("Returns disassembled code when asked",()=>{
-		let retObj = interpreter.runCode('double a=1;', true, false);
-		let retObj2 = interpreter.runCode('double a=1;', true, true);
+		let retObj = interpreter.runCode('double a=1;', null, true, false);
+		let retObj2 = interpreter.runCode('double a=1;', null, true, true);
 		expect(retObj.disassembled).not.toEqual(retObj2.disassembled);
 	})
 })

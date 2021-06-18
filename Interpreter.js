@@ -45,9 +45,29 @@ class Interpreter {
 		return builtDef;
 	}
 
-	runCode(code, optimize, wantsDisassembled, ...externals){
+	runCode(code, expectedExitType, optimize, wantsDisassembled, ...externals){
 		let disassembled="";
 		try {
+			if (expectedExitType){
+				switch (expectedExitType.toLowerCase().trim()){
+					case "string":
+						expectedExitType=IdentityType.String;
+						break;
+					case "double":
+						expectedExitType=IdentityType.Double;
+						break;
+					case "bool":
+						expectedExitType=IdentityType.Bool;
+						break;
+					case "null":
+						expectedExitType=IdentityType.Null;
+						break;
+					default:
+						expectedExitType=null;
+				}
+			}
+
+			if (Array.isArray(externals[0])) externals=[...externals[0]];
 
 			//Build the external parsing list and execution list
 			const parserExternList=[];
@@ -76,7 +96,7 @@ class Interpreter {
 
 			//Parse and generate byte code
 			let parser=new Parser(tokenList);
-			const program=parser.parse(optimize, parserExternList);
+			const program=parser.parse(optimize, expectedExitType, parserExternList);
 
 			//Grab the disassembled byte code for debugging
 			if (wantsDisassembled){

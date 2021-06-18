@@ -96,8 +96,8 @@ class Parser {
 		}
 	}
 	
-	parse(optimize, externals){
-		
+	parse(optimize, expectedExitType, externals){
+		this.expectedExitType=expectedExitType;
 		this.tokenEndIndex=this.tokens.length;
 		this.firstToken();
 
@@ -174,6 +174,7 @@ class Parser {
 			case IdentityType.String:
 				this.allocScope[this.allocScopeIndex]++;
 				break;
+			default:
 		}
 		return obj;
 	}
@@ -207,6 +208,7 @@ class Parser {
 		case TokenType.Divide:
 		case TokenType.Mod:
 			return true;
+		default:
 		}
 		return false;
 	}
@@ -225,6 +227,7 @@ class Parser {
 			case TokenType.Equals:
 			case TokenType.NotEquals:
 				return true;
+			default:
 		}
 		return false;
 	}
@@ -295,6 +298,7 @@ class Parser {
 			case IdentityType.Double:
 				this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedVariable(identObj.type, identObj.scope, identObj.index, varName) );
 				return identObj.type;
+			default:
 		}
 		this.throwError("unknown ident type "+varName+":"+identObj.type.toString());
 	}
@@ -553,6 +557,7 @@ class Parser {
 					this.program.addExponent( Program.unlinkedReg("ebx"), Program.unlinkedReg("eax") );
 					this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
 					break;
+				default:
 			}
 		}
 
@@ -585,6 +590,7 @@ class Parser {
 					this.program.addMod( Program.unlinkedReg("ebx"), Program.unlinkedReg("eax") );
 					this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
 					break;
+				default:
 			}
 		}
 
@@ -621,6 +627,7 @@ class Parser {
 					this.program.addSub( Program.unlinkedReg("eax"), Program.unlinkedReg("ebx") );
 					this.program.addNeg( Program.unlinkedReg("eax") );
 					break;
+				default:
 			}
 		}
 
@@ -663,6 +670,7 @@ class Parser {
 					this.matchType(leftType, IdentityType.Double, true);
 					this.program.addSBE( Program.unlinkedReg("eax") );
 					break;
+				default:
 			}
 
 			leftType=IdentityType.Bool;
@@ -884,7 +892,10 @@ class Parser {
 	doExit(){
 		this.match(TokenType.Exit);
 		if (this.token?.type !== TokenType.LineDelim){
-			this.doExpression();
+			const exitType=this.doExpression();
+			if (this.expectedExitType){
+				this.matchType(exitType, this.expectedExitType, true);
+			}
 			this.program.addExit( Program.unlinkedReg("eax") );
 		}else{
 			this.program.addExit( Program.unlinkedNull() );

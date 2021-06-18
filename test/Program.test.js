@@ -6,10 +6,10 @@ describe("Program",()=>{
     it("a=a produces smaller program when optimized",()=>{
         const interpreter = new Interpreter();
 
-        let retObj=interpreter.runCode('double a=5; a=a;', true, true);
+        let retObj=interpreter.runCode('double a=5; a=a;', null, true, true);
         const optimized=retObj.disassembled.length;
 
-        retObj=interpreter.runCode('double a=5; a=a;', false, true);
+        retObj=interpreter.runCode('double a=5; a=a;', null, false, true);
         const notOptimized=retObj.disassembled.length;
 
         expect(optimized<notOptimized).toEqual(true);

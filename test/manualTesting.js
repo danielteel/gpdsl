@@ -38,6 +38,6 @@ const numberOfTestsPassed = new NumberObj("numberOfTestsPassed", 0, false);
 let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted,  numberOfTestsPassed];
 
 const interpreter = new Interpreter();
-let retObj = interpreter.runCode( testCode, false, false, ...imports );
-
+let retObj = interpreter.runCode( testCode, null, false, false, ...imports );
+console.log(retObj.exitObject.value);
 console.log("Number of passed tests: "+numberOfTestsPassed.value);
