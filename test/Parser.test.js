@@ -16,43 +16,43 @@ describe("Parser",()=>{
     }
 
     it("throwError",()=>{
-			let tokenList=tokenizer.tokenize(`{`);
-			let parser=new Parser([tokenList[0]]);
-			expect(()=>parser.parse()).toThrow();
-
-			tokenList=tokenizer.tokenize(`double a; a=a+`);
-			parser=new Parser(tokenList);
-			expect(()=>parser.parse()).toThrow();
-
-			tokenList=tokenizer.tokenize(`double a; a=double(null);`);
-			parser=new Parser(tokenList);
+        let tokenList=tokenizer.tokenize(`{`);
+        let parser=new Parser([tokenList[0]]);
+        expect(()=>parser.parse()).toThrow();
+            
+        tokenList=tokenizer.tokenize(`double a; a=a+`);
+        parser=new Parser(tokenList);
+        expect(()=>parser.parse()).toThrow();
+            
+        tokenList=tokenizer.tokenize(`double a; a=double(null);`);
+        parser=new Parser(tokenList);
     });
 
     it("expect exit types",()=>{
-			let tokenList=tokenizer.tokenize(`exit false;`);
-			let parser=new Parser(tokenList);
-			expect(()=>parser.parse(false, IdentityType.String)).toThrow();
+        let tokenList=tokenizer.tokenize(`exit false;`);
+        let parser=new Parser(tokenList);
+        expect(()=>parser.parse(false, IdentityType.String)).toThrow();
 
-			tokenList=tokenizer.tokenize(`exit 'imastring';`);
-			parser=new Parser(tokenList);
-			expect(()=>parser.parse(false, IdentityType.String)).not.toThrow();
+        tokenList=tokenizer.tokenize(`exit 'imastring';`);
+        parser=new Parser(tokenList);
+        expect(()=>parser.parse(false, IdentityType.String)).not.toThrow();
 
 
-			tokenList=tokenizer.tokenize(`exit 'yolo';`);
-			parser=new Parser(tokenList);
-			expect(()=>parser.parse(false, IdentityType.Double)).toThrow();
+        tokenList=tokenizer.tokenize(`exit 'yolo';`);
+        parser=new Parser(tokenList);
+        expect(()=>parser.parse(false, IdentityType.Double)).toThrow();
 
-			tokenList=tokenizer.tokenize(`exit 100;`);
-			parser=new Parser(tokenList);
-			expect(()=>parser.parse(false, IdentityType.Double)).not.toThrow();
+        tokenList=tokenizer.tokenize(`exit 100;`);
+        parser=new Parser(tokenList);
+        expect(()=>parser.parse(false, IdentityType.Double)).not.toThrow();
 
-			tokenList=tokenizer.tokenize(`exit 1;`);
-			parser=new Parser(tokenList);
-			expect(()=>parser.parse(false, IdentityType.Bool)).toThrow();
+        tokenList=tokenizer.tokenize(`exit 1;`);
+        parser=new Parser(tokenList);
+        expect(()=>parser.parse(false, IdentityType.Bool)).toThrow();
 
-			tokenList=tokenizer.tokenize(`exit true;`);
-			parser=new Parser(tokenList);
-			expect(()=>parser.parse(false, IdentityType.Bool)).not.toThrow();
+        tokenList=tokenizer.tokenize(`exit true;`);
+        parser=new Parser(tokenList);
+        expect(()=>parser.parse(false, IdentityType.Bool)).not.toThrow();
     });
 
     it("fails for incorrect type in assignment",()=>{

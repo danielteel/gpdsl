@@ -16,7 +16,7 @@ describe("Program",()=>{
     })
 
     it("multiple same id labels in program throws",()=>{
-		const program = new Program();
+        const program = new Program();
         program.addLabel(0);
         program.addLabel(0);
 
@@ -24,7 +24,7 @@ describe("Program",()=>{
     })
 
     it("and on true/false works",()=>{
-		const program = new Program();
+        const program = new Program();
         program.addMov(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Bool, true));
         program.addMov(Program.unlinkedReg("ebx"), Program.unlinkedLiteral(IdentityType.Bool, false));
         program.addAnd(Program.unlinkedReg("eax"), Program.unlinkedReg("ebx"));
@@ -37,7 +37,7 @@ describe("Program",()=>{
     })
 
     it("and on true/true works",()=>{
-		const program = new Program();
+        const program = new Program();
         program.addMov(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Bool, true));
         program.addMov(Program.unlinkedReg("ebx"), Program.unlinkedLiteral(IdentityType.Bool, true));
         program.addAnd(Program.unlinkedReg("eax"), Program.unlinkedReg("ebx"));
@@ -50,7 +50,7 @@ describe("Program",()=>{
     })
 
     it("or on true/true works",()=>{
-		const program = new Program();
+        const program = new Program();
         program.addMov(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Bool, true));
         program.addMov(Program.unlinkedReg("ebx"), Program.unlinkedLiteral(IdentityType.Bool, true));
         program.addOr(Program.unlinkedReg("eax"), Program.unlinkedReg("ebx"));
@@ -63,7 +63,7 @@ describe("Program",()=>{
     })
 
     it("or on true/false works",()=>{
-		const program = new Program();
+        const program = new Program();
         program.addMov(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Bool, true));
         program.addMov(Program.unlinkedReg("ebx"), Program.unlinkedLiteral(IdentityType.Bool, false));
         program.addOr(Program.unlinkedReg("eax"), Program.unlinkedReg("ebx"));
@@ -76,7 +76,7 @@ describe("Program",()=>{
     })
 
     it("or on false/false works",()=>{
-		const program = new Program();
+        const program = new Program();
         program.addMov(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Bool, false));
         program.addMov(Program.unlinkedReg("ebx"), Program.unlinkedLiteral(IdentityType.Bool, false));
         program.addOr(Program.unlinkedReg("eax"), Program.unlinkedReg("ebx"));
@@ -89,7 +89,7 @@ describe("Program",()=>{
     })
 
     it("clamp works",()=>{
-		let program = new Program();
+        let program = new Program();
         program.addMov(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Double, 100));
         program.addClamp(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Double, 0), Program.unlinkedLiteral(IdentityType.Double, 50));
         program.addExit(Program.unlinkedReg("eax"));
@@ -97,7 +97,7 @@ describe("Program",()=>{
         program.link(false);
         expect(program.execute().value).toEqual(50);
         
-		program = new Program();
+        program = new Program();
         program.addMov(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Double, 100));
         program.addClamp(Program.unlinkedReg("eax"), Program.unlinkedLiteral(IdentityType.Double, 200), Program.unlinkedLiteral(IdentityType.Double, 300));
         program.addExit(Program.unlinkedReg("eax"));
@@ -107,12 +107,12 @@ describe("Program",()=>{
     })
 
     it("bad register name throws",()=>{
-		const program = new Program();
+        const program = new Program();
         expect(()=>program.addMov(Program.unlinkedReg("yolo"), Program.unlinkedLiteral(IdentityType.Bool, false))).toThrow();
     })
 
     it("trying to execute on unlinked code fails",()=>{
-		const program = new Program();
+        const program = new Program();
 
         expect(()=>program.execute()).toThrow();
     })
