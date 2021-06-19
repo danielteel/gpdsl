@@ -199,22 +199,8 @@ class Program {
 				let cur=this.code[i];
 				let nxt=this.code[i+1];
 				let nxtnxt=i<this.code.length-2?this.code[i+2]:null;
-				let nxtnxtnxt=i<this.code.length-3?this.code[i+3]:null;
 
 				switch (cur.type){
-					case OpCode.cmp:
-						if (this.isSetOpCode(nxt) && nxtnxt.type===OpCode.test && (nxtnxtnxt.type===OpCode.je || nxtnxtnxt.type===OpCode.jne)){
-							if (nxt.obj0.type===UnlinkedType.register && this.unlinkedsEqual(nxt.obj0, nxtnxt.obj0)){
-								let newJmpOp = this.optimizeSetToJmp(nxt, nxtnxtnxt);
-								if (newJmpOp){
-									this.code[i+1]=newJmpOp;
-									this.code.splice(i+2,2);
-									i--;
-									stillOptimizing=true;
-								}
-							}
-						}
-						break;
 					case OpCode.push:
 						if (nxt.type===OpCode.mov && nxtnxt?.type===OpCode.pop){
 							if (!this.unlinkedsEqual(cur.obj0, nxt.obj0)){
