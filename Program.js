@@ -513,7 +513,7 @@ class Program {
 					case OpCode.todouble:
 						obj0 = link(opcode.obj0);
 						if (obj0.value===null) this.executionError("tried to convert null to double");	
-						obj0.setTo(new NumberObj(null, Number(obj0.value), true));
+						obj0.setTo(new NumberObj(null, Number.parseFloat(obj0.value), true));
 						break;
 					case OpCode.tobool:
 						obj0 = link(opcode.obj0);
@@ -672,6 +672,7 @@ class Program {
 							scopes.push([[]]);
 						}
 						break;
+					default:
 				}
 				eip++;
 			}

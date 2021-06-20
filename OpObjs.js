@@ -220,6 +220,7 @@ class BoolObj extends OpObj {
 
 class NumberObj extends OpObj {
 	constructor(name, initialVal=null, isConstant=false){
+		if (initialVal===null || !isFinite(initialVal)) initialVal=null;
 		super(name, OpObjType.num,  initialVal===null?null:Number(initialVal), isConstant);
 	}
 	
@@ -239,7 +240,7 @@ class NumberObj extends OpObj {
 				this._value=null;
 				break;
 			case OpObjType.bool:
-				this._value=obj._value===null ? null : Number(obj._value);
+				this._value=obj._value===null ? null : Number.parseFloat(obj._value);
 				break;
 			case OpObjType.num:
 				this._value=obj._value;
