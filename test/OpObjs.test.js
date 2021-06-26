@@ -1,4 +1,4 @@
-import {OpObjType, OpObj, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} from '../OpObjs';
+const {OpObjType, OpObj, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} = require('../OpObjs');
 
 describe("OpObj",()=>{
     it("default constructor values",()=>{
@@ -241,10 +241,6 @@ describe("BoolObj",()=>{
 
         expect(boolObj.smallerThan(new NumberObj(null, 1))).toEqual(true);
         expect(boolObj.smallerThan(new NumberObj(null, 0))).toEqual(false);
-
-        const regObj = new RegisterObj();
-        regObj.setTo(new NullObj());
-        expect(()=>boolObj.smallerThan(regObj)).toThrow();
     })
 
     it("greaterThan",()=>{
@@ -255,10 +251,6 @@ describe("BoolObj",()=>{
 
         expect(boolObj.greaterThan(new NumberObj(null, 1))).toEqual(false);
         expect(boolObj.greaterThan(new NumberObj(null, 0))).toEqual(true);
-
-        const regObj = new RegisterObj();
-        regObj.setTo(new NullObj());
-        expect(()=>boolObj.greaterThan(regObj)).toThrow();
     })
 
     it("smallerOrEqualThan",()=>{

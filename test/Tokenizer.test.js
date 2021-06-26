@@ -1,4 +1,4 @@
-import Tokenizer, {TokenType} from '../Tokenizer';
+const {Tokenizer, TokenType} =  require('../Tokenizer');
 
 describe("Tokenizer",()=>{
 

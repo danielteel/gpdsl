@@ -1,4 +1,6 @@
-import Utils from './Utils';
+//import Utils from './Utils';
+const {Utils} = require('./Utils');
+
 
 const OpObjType={
 	bool: Symbol("bool"),
@@ -158,7 +160,7 @@ class BoolObj extends OpObj {
 			this._value=null;
 			break;
 		case OpObjType.bool:
-			this._value=Boolean(obj._value);
+			this._value=obj._value;
 			break;
 		case OpObjType.num:
 			this._value=obj._value===null ? null : Boolean(obj._value);
@@ -190,6 +192,7 @@ class BoolObj extends OpObj {
 	smallerThan(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
+		if (this._value===null || obj._value===null) return false;
 		switch (type){
 		case OpObjType.bool:
 			return this._value<obj._value;
@@ -202,6 +205,7 @@ class BoolObj extends OpObj {
 	greaterThan(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
+		if (this._value===null || obj._value===null) return false;
 		switch (type){
 		case OpObjType.bool:
 			return this._value>obj._value;
@@ -275,9 +279,7 @@ class NumberObj extends OpObj {
 	smallerThan(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
-		if (obj._value===null || this._value===null){
-			throw new Error("tried to do size comparison with null");
-		}
+		if (this._value===null || obj._value===null) return false;
 		switch (type){
 			case OpObjType.bool:
 				return this._value<Number(obj._value);
@@ -290,9 +292,7 @@ class NumberObj extends OpObj {
 	greaterThan(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
-		if (obj._value===null || this._value===null){
-			throw new Error("tried to do size comparison with null");
-		}
+		if (this._value===null || obj._value===null) return false;
 		switch (type){
 			case OpObjType.bool:
 				return this._value>Number(obj._value);
@@ -367,4 +367,5 @@ class StringObj extends OpObj {
 	}
 }
 
-export {OpObjType, OpObj, NullObj, RegisterObj, StringObj, BoolObj, NumberObj};
+module.exports = {OpObjType, OpObj, NullObj, RegisterObj, StringObj, BoolObj, NumberObj};
+//export {OpObjType, OpObj, NullObj, RegisterObj, StringObj, BoolObj, NumberObj};

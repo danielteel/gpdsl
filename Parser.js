@@ -1,11 +1,12 @@
-import {IdentityType} from "./Utils";
-import Program from "./Program";
-import {TokenType} from "./Tokenizer";
+// import {IdentityType} from "./Utils";
+// import Program from "./Program";
+// import {TokenType} from "./Tokenizer";
+const {IdentityType} = require('./Utils');
+const {Program} = require('./Program');
+const {TokenType} = require('./Tokenizer');
 
 
-export {IdentityType};
-
-export default class Parser {
+class Parser {
 	constructor(tokens){
 		this.tokens=tokens;
 
@@ -1200,3 +1201,8 @@ export default class Parser {
 		if (!dontPushScope) this.popScope();
 	}
 }
+
+
+//export {IdentityType};
+//export default Parser;
+module.exports={IdentityType, Parser};

@@ -1,10 +1,12 @@
-import {StringObj, NumberObj, BoolObj} from './OpObjs';
-import Tokenizer from './Tokenizer';
-import Parser, {IdentityType} from './Parser';
+// import {StringObj, NumberObj, BoolObj} from './OpObjs';
+// import Tokenizer from './Tokenizer';
+// import Parser, {IdentityType} from './Parser';
+const {StringObj, NumberObj, BoolObj} = require('./OpObjs');
+const {Tokenizer} = require('./Tokenizer');
+const {Parser, IdentityType} = require('./Parser');
 
-export {NumberObj, BoolObj, StringObj};
 
-export default class Interpreter {
+class Interpreter {
 
 	static funcDef(name, func, returnType, ...params){
 		let builtDef={name, func, type: IdentityType.Function};
@@ -109,8 +111,13 @@ export default class Interpreter {
 
 			return {exitObject: exitObject, disassembled: disassembled};
 		} catch (error){
-			console.log(disassembled);
 			return {error: error, disassembled};
 		}
 	}
 }
+
+
+
+module.exports={Interpreter, NumberObj, BoolObj, StringObj}
+//export {NumberObj, BoolObj, StringObj};
+//export default Interpreter;

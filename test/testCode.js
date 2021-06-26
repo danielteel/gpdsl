@@ -66,6 +66,10 @@ bool testAdd(){
 	if (-2.0+1.0 != -1) return false;
 	if (123456+654321 != 777777) return false;
 	if (0.123+-.123+45.5 != 45.5) return false;
+	if (string(null)+"123" != "null123") return false;
+	if ("123"+string(null)!="123null") return false;
+	if (string(null)+string(null)!="nullnull") return false;
+	if ("a"+"b" != "ab") return false;
 	return true;
 }
 
@@ -189,14 +193,17 @@ bool testUnarys(){
 }
 
 bool testConversions(){
+	if (string(null)!=null) return false;
 	if (string(500)!="500") return false;
 	if (string(123456.789, 2)!="123456.79") return false;
 	if (string(true)!="true") return false;
 	if (string(false)!="false") return false;
+	if (double(null)!=null) return false;
 	if (double("0123.4")!=123.4) return false;
 	if (double("-.456")!=-.456) return false;
 	if (double(true)!=1) return false;
 	if (double(false)!=0) return false;
+	if (bool(null)!=null) return false;
 	if (bool("gsfg5dfg")!=true) return false;
 	if (bool("")!=false) return false;
 	if (bool(100) != true) return false;
@@ -419,4 +426,4 @@ print("Testing time = "+string(time()-startTime)+"ms");
 exit testDone();
 `;
 
-export default testCode;
+module.exports={testCode}

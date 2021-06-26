@@ -1,7 +1,10 @@
-import Utils, {IdentityType} from "./Utils";
-import {OpObjType, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} from './OpObjs';
+//import Utils, {IdentityType} from "./Utils";
+//import {OpObjType, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} from './OpObjs';
+const {Utils, IdentityType} = require('./Utils');
+const {OpObjType, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} = require('./OpObjs');
 
-export const OpCode = {
+
+const OpCode = {
 	label:		Symbol("label"),
 	jmp:		Symbol("jmp"),
 
@@ -63,7 +66,7 @@ export const OpCode = {
 	scopedepth:	Symbol("scopedepth")
 }
 
-export const UnlinkedType={
+const UnlinkedType={
 	register:	Symbol("register"),
 	variable:	Symbol("variable"),
 	literal:	Symbol("literal"),
@@ -71,8 +74,7 @@ export const UnlinkedType={
 }
 
 
-
-export default class Program {
+class Program {
 	static regSymbols = {eax: Symbol("eax"), ebx: Symbol("ebx"), ecx: Symbol("ecx")};
 	static unlinkedReg(registerName){
 		switch (registerName.trim().toLowerCase()){
@@ -482,18 +484,21 @@ export default class Program {
 						
 					case OpCode.ceil:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to do ceil on null value");
-						obj0.setTo(new NumberObj(null, Math.ceil(obj0.value), true));
+						if (obj0.value!==null){
+							obj0.setTo(new NumberObj(null, Math.ceil(obj0.value), true));
+						}
 						break;
 					case OpCode.floor:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to do floor on null value");
-						obj0.setTo(new NumberObj(null, Math.floor(obj0.value), true));
+						if (obj0.value!==null){
+							obj0.setTo(new NumberObj(null, Math.floor(obj0.value), true));
+						}
 						break;
 					case OpCode.abs:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to do abs on null value");
-						obj0.setTo(new NumberObj(null, Math.abs(obj0.value), true));
+						if (obj0.value!==null){
+							obj0.setTo(new NumberObj(null, Math.abs(obj0.value), true));
+						}
 						break;
 					case OpCode.min:
 						obj0 = link(opcode.obj0);
@@ -520,66 +525,90 @@ export default class Program {
 						break;
 					case OpCode.todouble:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to convert null to double");
-						obj0.setTo(new NumberObj(null, Number.parseFloat(String(obj0.value)), true));
+						if (obj0.value===null){
+							obj0.setTo(new NumberObj(null, null, true));
+						}else{
+							if (obj0.value===true || obj0.value===false){
+								obj0.setTo(new NumberObj(null, obj0.value), true);
+							}else{
+								obj0.setTo(new NumberObj(null, Number.parseFloat(String(obj0.value)), true));
+							}
+						}
 						break;
 					case OpCode.tobool:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to convert null to bool");
-						obj0.setTo(new BoolObj(null, Boolean(obj0.value), true));
+						if (obj0.value===null){
+							obj0.setTo(new BoolObj(null, null, true));
+						}else{
+							obj0.setTo(new BoolObj(null, Boolean(obj0.value), true));
+						}
 						break;
 					case OpCode.len:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to get length of null string");
-						obj0.setTo(new NumberObj(null, obj0.value.length, true));
+						if (obj0.value===null){
+							obj0.setTo(new NumberObj(null, null, true));
+						}else{
+							obj0.setTo(new NumberObj(null, obj0.value.length, true));
+						}
 						break;
 
 					case OpCode.lcase:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to set null string to lower case");
-						obj0.setTo( new StringObj(null, obj0.value.toLowerCase(), true) );
+						if (obj0.value!==null){
+							obj0.setTo( new StringObj(null, obj0.value.toLowerCase(), true) );
+						}
 						break;
 					case OpCode.ucase:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to set null string to upper case");
-						obj0.setTo( new StringObj(null, obj0.value.toUpperCase(), true) );
+						if (obj0.value!==null){
+							obj0.setTo( new StringObj(null, obj0.value.toUpperCase(), true) );
+						}
 						break;
 					case OpCode.trim:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to trim null string");
-						obj0.setTo( new StringObj(null, obj0.value.trim(), true) );
+						if (obj0.value!==null){
+							obj0.setTo( new StringObj(null, obj0.value.trim(), true) );
+						}
 						break;
 					case OpCode.substr:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
 						obj2 = link(opcode.obj2);
-						if (obj0.value===null) this.executionError("tried to get substring of null string");
-						if (obj1.value===null) this.executionError("tried to get substring with null index");
-						if (obj2.value===null) this.executionError("tried to get substring with null length");
-						obj0.setTo( new StringObj(null, obj0.value.substr(obj1.value, obj2.value), true) );
+						if (obj0.value===null || obj1.value===null){
+							obj0.setTo( new StringObj(null, null, true) );
+						}else{
+							if (obj2.value===null){
+								obj0.setTo( new StringObj(null, obj0.value.substr(obj1.value), true) );
+							}else{
+								obj0.setTo( new StringObj(null, obj0.value.substr(obj1.value, obj2.value), true) );
+							}
+						}
 						break;
 					case OpCode.tostring:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) this.executionError("tried to convert null to string");
-						let val=obj0.value;
-						if (obj1.value!==null){
-							if (obj1.value>=0) val=Number(val).toFixed(obj1.value);
-							if (obj1.value<0){
-								const multiplier=10**Math.abs(obj1.value);
-								val=String(Math.round(val/multiplier)*multiplier);
-							}
+						if (obj0.value===null){
+							obj0.setTo( new StringObj(null, null, true) );
 						}else{
-							val=String(val);
+							let val=obj0.value;
+							if (obj1.value!==null){
+								if (obj1.value>=0) val=Number(val).toFixed(obj1.value);
+								if (obj1.value<0){
+									const multiplier=10**Math.abs(obj1.value);
+									val=String(Math.round(val/multiplier)*multiplier);
+								}
+							}else{
+								val=String(val);
+							}
+							obj0.setTo( new StringObj(null, val, true) );
 						}
-						obj0.setTo( new StringObj(null, val, true) );
 						break;
 					case OpCode.concat:
 						obj0 = link(opcode.obj0);
 						obj1 = link(opcode.obj1);
-						if (obj0.value===null) this.executionError("tried to concat null to string");
-						if (obj1.value===null) this.executionError("tried to concat string to null");
-						obj0.setTo( new StringObj(null, obj0.value+obj1.value, true) );
+						const a = obj0.value===null ? "null" : obj0.value;
+						const b = obj1.value===null ? "null" : obj1.value;
+						obj0.setTo( new StringObj(null, a+b, true) );
 						break;
 					case OpCode.double:
 						scopes[opcode.obj0.scope][scopes[opcode.obj0.scope].length-1][opcode.obj0.index]=new NumberObj(null, null, false);
@@ -614,11 +643,15 @@ export default class Program {
 						break;
 					case OpCode.and:
 						obj0=link(opcode.obj0);
-						obj0.setTo( new BoolObj(null, obj0.value && link(opcode.obj1).value, true) );
+						obj1=link(opcode.obj1);
+						if (obj0.value===null || obj1.value===null) this.executionError("tried to do && with a null value");
+						obj0.setTo( new BoolObj(null, obj0.value && obj1.value, true) );
 						break;
 					case OpCode.or:
 						obj0=link(opcode.obj0);
-						obj0.setTo( new BoolObj(null, obj0.value || link(opcode.obj1).value, true) );
+						obj1=link(opcode.obj1);
+						if (obj0.value===null || obj1.value===null) this.executionError("tried to do || with a null value");
+						obj0.setTo( new BoolObj(null, obj0.value || obj1.value, true) );
 						break;
 					case OpCode.add:
 						obj0=link(opcode.obj0);
@@ -635,6 +668,7 @@ export default class Program {
 					case OpCode.mul:
 						obj0=link(opcode.obj0);
 						obj1=link(opcode.obj1);
+						if (obj0.value===null || obj1.value===null) this.executionError("tried to mul null");
 						obj0.setTo( new NumberObj(null, obj0.value * obj1.value, true) );
 						break;
 					case OpCode.div:
@@ -961,3 +995,8 @@ export default class Program {
 	}
 
 }
+
+
+//export {OpCode, UnlinkedType};
+//export default Program;
+module.exports={OpCode, UnlinkedType, Program};

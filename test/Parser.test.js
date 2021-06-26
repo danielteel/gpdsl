@@ -1,7 +1,7 @@
-import Parser from '../Parser';
-import {OpCode, UnlinkedType} from '../Program';
-import Tokenizer from '../Tokenizer';
-import {IdentityType}  from '../Utils';
+const {Parser} =  require('../Parser');
+const {OpCode, UnlinkedType} =  require('../Program');
+const {Tokenizer} =  require('../Tokenizer');
+const {IdentityType}  =  require('../Utils');
 
 describe("Parser",()=>{
     let tokenizer;

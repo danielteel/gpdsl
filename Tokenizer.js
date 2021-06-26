@@ -1,4 +1,4 @@
-export const TokenType = {
+const TokenType = {
 	LineDelim: Symbol(";"),
 	NewLine: Symbol("newline"),
 
@@ -92,7 +92,7 @@ function isSpace(character){
 	return false;
 }
 
-export default class Tokenizer {
+class Tokenizer {
 	static newTokenObj(type, value, line) {
 		return {type: type, value: value, line: line};
 	}
@@ -442,5 +442,9 @@ export default class Tokenizer {
 			}
 		}
 	}
-
 }
+
+
+//export {TokenType};
+//export default Tokenizer;
+module.exports={TokenType, Tokenizer};
