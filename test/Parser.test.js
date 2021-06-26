@@ -1,8 +1,7 @@
-const {Parser} = require('../Parser');
-const {OpCode, UnlinkedType} = require('../Program');
-const Tokenizer = require('../Tokenizer');
-const { IdentityType } = require('../Utils');
-const TokenType = Tokenizer.TokenType;
+import Parser from '../Parser';
+import {OpCode, UnlinkedType} from '../Program';
+import Tokenizer from '../Tokenizer';
+import {IdentityType}  from '../Utils';
 
 describe("Parser",()=>{
     let tokenizer;
@@ -10,7 +9,7 @@ describe("Parser",()=>{
         tokenizer=new Tokenizer();
     })
 
-    exepctFailure = (code) => {
+    const exepctFailure = (code) => {
         const tokenList=tokenizer.tokenize(code);
         expect(()=>(new Parser(tokenList)).parse()).toThrow();
     }

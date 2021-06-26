@@ -1,10 +1,11 @@
-const {IdentityType} = require("./Utils");
-const TokenType=require("./Tokenizer").TokenType;
-const {Program} = require("./Program");
+import {IdentityType} from "./Utils";
+import Program from "./Program";
+import {TokenType} from "./Tokenizer";
 
 
+export {IdentityType};
 
-class Parser {
+export default class Parser {
 	constructor(tokens){
 		this.tokens=tokens;
 
@@ -936,7 +937,7 @@ class Parser {
 		let isFirstOne=true;
 
 		do {
-			let varName = this.token?.value;
+			const varName = this.token?.value;
 			this.match(TokenType.Ident);
 
 			if (cantBeFunction===false && isFirstOne && this.token?.type===TokenType.LeftParen){
@@ -983,9 +984,9 @@ class Parser {
 		this.pushAllocScope();
 		const funcAddress=this.program.addLabel( funcBlockBranch );
 
-		let paramTypes=[];
-		let paramIdents=[];
-		let paramObjs=[];
+		const paramTypes=[];
+		const paramIdents=[];
+		const paramObjs=[];
 
 		this.match(TokenType.LeftParen);
 		while (this.isNotEnd() && this.token.type!==TokenType.RightParen){
@@ -1014,12 +1015,12 @@ class Parser {
 		}
 		this.match(TokenType.RightParen);
 		
-		let identObj = this.addFunction(name, type, funcBlockBranch, paramTypes);
+		const identObj = this.addFunction(name, type, funcBlockBranch, paramTypes);
 		if (!identObj) this.throwError("failed to add function '"+name+"' to ident list");
 
 		this.pushScope();
 		for (let i=0;i<paramIdents.length;i++){
-			let obj=this.addVar(paramIdents[i], paramTypes[i]);
+			const obj=this.addVar(paramIdents[i], paramTypes[i]);
 			if (!obj) this.throwError("attempted to push null param to list on function '"+name+"'")
 			paramObjs.push(obj);
 		}
@@ -1033,11 +1034,11 @@ class Parser {
 		this.program.addPopScope( this.allocScopeIndex );
 		this.program.addRet();
 
-		let funcPreamble=[];
+		const funcPreamble=[];
 		funcPreamble.push(this.program.addPushScope( this.allocScopeIndex, this.allocScope[this.allocScopeIndex], true ));
 
 		for (let i=paramObjs.length-1;i>=0;i--){
-			let unlinkedParam=Program.unlinkedVariable(paramObjs[i].type, paramObjs[i].scope, paramObjs[i].index, paramObjs[i].name);
+			const unlinkedParam=Program.unlinkedVariable(paramObjs[i].type, paramObjs[i].scope, paramObjs[i].index, paramObjs[i].name);
 			switch (paramObjs[i].type){
 			case IdentityType.Bool:
 				funcPreamble.push(this.program.addBool( unlinkedParam, true ));
@@ -1066,7 +1067,7 @@ class Parser {
 		this.match(TokenType.Return);
 
 		if (this.token?.type!==TokenType.LineDelim){
-			let expressionType=this.doExpression();
+			const expressionType=this.doExpression();
 			this.matchType(expressionType, returnType);
 		}else{
 			this.program.addMov( Program.unlinkedReg("eax"), Program.unlinkedNull() );
@@ -1077,15 +1078,15 @@ class Parser {
 	}
 	
 	doAssignment(wantsDelim=true){
-		let varName=this.token.value;
+		const varName=this.token.value;
 
 		this.match(TokenType.Ident);
-		let identObj = this.getIdentity(varName);
+		const identObj = this.getIdentity(varName);
 		if (!identObj) this.throwError("tried to assign to undefined '"+varName+"'");
 
 		this.match(TokenType.Assignment);
 
-		let expressionType=this.doExpression();
+		const expressionType=this.doExpression();
 		this.matchType(identObj.type, expressionType);
 
 		this.program.addMov( Program.unlinkedVariable(identObj.type, identObj.scope, identObj.index, varName), Program.unlinkedReg("eax") );
@@ -1094,9 +1095,9 @@ class Parser {
 	}
 
 	doIdentStatement(){
-		let identName = this.token.value;
+		const identName = this.token.value;
 
-		let identObj = this.getIdentity(identName);
+		const identObj = this.getIdentity(identName);
 		if (!identObj) this.throwError("trying to operate on undefined '"+identName+"'");
 
 		switch (identObj.type){
@@ -1137,7 +1138,7 @@ class Parser {
 				break;
 
 			case TokenType.Return:
-				if (returnToBranch!=null && returnToBranch!=undefined){
+				if (returnToBranch!==null && returnToBranch!==undefined){
 					this.doReturn(returnToBranch, returnType);
 				}else{
 					this.throwError("not allowed to return outside of a function");
@@ -1199,5 +1200,3 @@ class Parser {
 		if (!dontPushScope) this.popScope();
 	}
 }
-
-module.exports={Parser, IdentityType};

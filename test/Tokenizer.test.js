@@ -1,9 +1,9 @@
-const Tokenizer = require('../Tokenizer');
-const TokenType = Tokenizer.TokenType;
+import Tokenizer, {TokenType} from '../Tokenizer';
 
 describe("Tokenizer",()=>{
 
     let tokenizer;
+
     beforeEach(()=>{
         tokenizer=new Tokenizer();
     })
@@ -90,10 +90,10 @@ describe("Tokenizer",()=>{
     })
 
     it("Ident",()=>{
-        expectGoodIdent = (name) => {
+        const expectGoodIdent = (name) => {
             expect(tokenizer.tokenize(name)[0]).toEqual({line: 1, type: TokenType.Ident, value: name});
         }
-        expectBadIdent = (name) => {
+        const expectBadIdent = (name) => {
             expect(tokenizer.tokenize(name)[0]).not.toEqual({line: 1, type: TokenType.Ident, value: name});
         }
 

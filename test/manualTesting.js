@@ -1,5 +1,5 @@
-const {Interpreter, StringObj, NumberObj, BoolObj} = require('../Interpreter');
-const testCode=require('./testCode');
+import Interpreter, {StringObj, NumberObj, BoolObj} from '../Interpreter';
+import {testCode} from './testCode';
 
 
 //Define our functions we are going to import into the interpreter

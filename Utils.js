@@ -1,4 +1,4 @@
-class Utils{
+export default class Utils{
 	static isAboutEquals(a,b){
 		if (Math.abs(a-b)<0.0000001){
 			return true;
@@ -7,7 +7,7 @@ class Utils{
 	}
 }
 
-const IdentityType = {
+export const IdentityType = {
 	Null: Symbol("Null"),
 
 	Bool: Symbol("Bool"),
@@ -16,5 +16,3 @@ const IdentityType = {
 
 	Function: Symbol("Function")
 }
-
-module.exports={Utils, IdentityType};

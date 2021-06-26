@@ -1,4 +1,4 @@
-const {Interpreter, StringObj, NumberObj, BoolObj} = require('../Interpreter');
+import Interpreter, {StringObj, NumberObj, BoolObj} from '../Interpreter';
 
 //Define our functions we are going to import into the interpreter
 const print = (popFn) => {

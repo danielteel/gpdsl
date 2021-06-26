@@ -1,8 +1,7 @@
-const {Utils, IdentityType} = require("./Utils");
-const {OpObjType, OpObj, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} = require('./OpObjs');
+import Utils, {IdentityType} from "./Utils";
+import {OpObjType, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} from './OpObjs';
 
-
-const OpCode = {
+export const OpCode = {
 	label:		Symbol("label"),
 	jmp:		Symbol("jmp"),
 
@@ -64,22 +63,23 @@ const OpCode = {
 	scopedepth:	Symbol("scopedepth")
 }
 
-const UnlinkedType={
+export const UnlinkedType={
 	register:	Symbol("register"),
 	variable:	Symbol("variable"),
 	literal:	Symbol("literal"),
-	null:	Symbol("null"),
+	null:		Symbol("null"),
 }
 
 
 
-class Program {
+export default class Program {
 	static regSymbols = {eax: Symbol("eax"), ebx: Symbol("ebx"), ecx: Symbol("ecx")};
 	static unlinkedReg(registerName){
 		switch (registerName.trim().toLowerCase()){
 				case "eax":	return {type: UnlinkedType.register, register: Program.regSymbols.eax, debugName:"eax"}
 				case "ebx":	return {type: UnlinkedType.register, register: Program.regSymbols.ebx, debugName:"ebx"}
 				case "ecx":	return {type: UnlinkedType.register, register: Program.regSymbols.ecx, debugName:"ecx"}
+				default:
 		}
 		this.otherError("no register with the name "+registerName+" exists");
 	}
@@ -143,6 +143,7 @@ class Program {
 			case OpCode.mod:
 			case OpCode.exponent: 
 				return true;
+			default:
 		}
 		return false;
 	}
@@ -264,6 +265,7 @@ class Program {
 							stillOptimizing=true;
 						}
 						break;
+					default:
 				}
 			}			
 		}
@@ -304,6 +306,7 @@ class Program {
 				case OpCode.call:
 					this.code[i].id=labelMap.get(this.code[i].id);
 					break;
+				default:
 			}
 		}
 		this.codeState=Program.CodeState.READY;
@@ -319,8 +322,10 @@ class Program {
 						return this.ebx;
 					case Program.regSymbols.ecx:
 						return this.ecx;
+					default:
+						this.executionError("unknown register");
 				}
-				this.executionError("unknown register");
+				break;
 
 			case UnlinkedType.variable:
 				return scopes[obj.scope][scopes[obj.scope].length-1][obj.index];
@@ -337,11 +342,14 @@ class Program {
 					default:
 						this.executionError("unknown unlinked literal type");
 				}
+				break;
 
 			case UnlinkedType.null:
 				return this.null;
+
+			default:
+				this.executionError("unknown unlinked object type");
 		}		
-		this.executionError("unknown unlinked object type");
 	}
 
 	otherError(message){
@@ -364,10 +372,10 @@ class Program {
 
 			let notDone=true;
 
-			let scopes=[[externals]];
+			const scopes=[[externals]];
 
-			let callStack=[];
-			let stack=[];
+			const callStack=[];
+			const stack=[];
 
 			let flag_e=false;
 			let flag_a=false;
@@ -512,8 +520,8 @@ class Program {
 						break;
 					case OpCode.todouble:
 						obj0 = link(opcode.obj0);
-						if (obj0.value===null) this.executionError("tried to convert null to double");	
-						obj0.setTo(new NumberObj(null, Number.parseFloat(obj0.value), true));
+						if (obj0.value===null) this.executionError("tried to convert null to double");
+						obj0.setTo(new NumberObj(null, Number.parseFloat(String(obj0.value)), true));
 						break;
 					case OpCode.tobool:
 						obj0 = link(opcode.obj0);
@@ -680,7 +688,7 @@ class Program {
 			return new BoolObj(null, true, true);
 		} catch (error) {
 			let callTraceMsg="\n";
-			for (let callData of trace.reverse()){
+			for (const callData of trace.reverse()){
 				callTraceMsg+="\tat "+callData.debugName+" address: "+callData.address+"\n";
 			}
 			throw Error("Execution error at address "+eip+": "+error.message+"\n"+callTraceMsg);
@@ -753,8 +761,9 @@ class Program {
 				return obj.value.toString();
 			case UnlinkedType.null:
 				return "null";
-		}		
-		return null;										
+			default:
+				return "unknown";
+		}
 	}
 
 	getDebugOutput(onlyPrintOpCodes=false){
@@ -952,6 +961,3 @@ class Program {
 	}
 
 }
-
-
-module.exports={Program, OpCode, UnlinkedType};

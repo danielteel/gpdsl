@@ -1,4 +1,4 @@
-module.exports = `
+const testCode = `
 string failedTests="";
 double failedTestCount=0;
 numberOfTestsPassed=0;
@@ -418,3 +418,5 @@ reportTest("Imported functions", testImportedFunctions());
 print("Testing time = "+string(time()-startTime)+"ms");
 exit testDone();
 `;
+
+export default testCode;

@@ -1,4 +1,4 @@
-const {OpObjType, OpObj, NullObj, RegisterObj, StringObj, NumberObj, BoolObj}=require('../OpObjs');
+import {OpObjType, OpObj, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} from '../OpObjs';
 
 describe("OpObj",()=>{
     it("default constructor values",()=>{

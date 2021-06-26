@@ -1,4 +1,4 @@
-const {Utils} = require('./Utils');
+import Utils from './Utils';
 
 const OpObjType={
 	bool: Symbol("bool"),
@@ -80,6 +80,7 @@ class RegisterObj extends OpObj {
 		case OpObjType.num:
 			this.numberObj._value=this._value;
 			return this.numberObj;
+		default:
 		}
 	}
 
@@ -157,7 +158,7 @@ class BoolObj extends OpObj {
 			this._value=null;
 			break;
 		case OpObjType.bool:
-			this._value=obj._value;
+			this._value=Boolean(obj._value);
 			break;
 		case OpObjType.num:
 			this._value=obj._value===null ? null : Boolean(obj._value);
@@ -174,7 +175,7 @@ class BoolObj extends OpObj {
 
 		switch (type){
 		case OpObjType.null:
-			return this.value===null;
+			return this._value===null;
 		case OpObjType.bool:
 			return this._value===obj._value;
 		case OpObjType.num:
@@ -240,7 +241,7 @@ class NumberObj extends OpObj {
 				this._value=null;
 				break;
 			case OpObjType.bool:
-				this._value=obj._value===null ? null : Number.parseFloat(obj._value);
+				this._value=obj._value===null ? null : Number(obj._value);
 				break;
 			case OpObjType.num:
 				this._value=obj._value;
@@ -274,6 +275,9 @@ class NumberObj extends OpObj {
 	smallerThan(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
+		if (obj._value===null || this._value===null){
+			throw new Error("tried to do size comparison with null");
+		}
 		switch (type){
 			case OpObjType.bool:
 				return this._value<Number(obj._value);
@@ -286,6 +290,9 @@ class NumberObj extends OpObj {
 	greaterThan(obj){
 		let type=obj._objType;
 		if (type===OpObjType.register) type=obj._curValType;
+		if (obj._value===null || this._value===null){
+			throw new Error("tried to do size comparison with null");
+		}
 		switch (type){
 			case OpObjType.bool:
 				return this._value>Number(obj._value);
@@ -360,4 +367,4 @@ class StringObj extends OpObj {
 	}
 }
 
-module.exports={OpObjType, OpObj, NullObj, RegisterObj, StringObj, NumberObj, BoolObj};
+export {OpObjType, OpObj, NullObj, RegisterObj, StringObj, BoolObj, NumberObj};

@@ -1,4 +1,4 @@
-const TokenType = {
+export const TokenType = {
 	LineDelim: Symbol(";"),
 	NewLine: Symbol("newline"),
 
@@ -92,7 +92,7 @@ function isSpace(character){
 	return false;
 }
 
-class Tokenizer {
+export default class Tokenizer {
 	static newTokenObj(type, value, line) {
 		return {type: type, value: value, line: line};
 	}
@@ -390,6 +390,7 @@ class Tokenizer {
 							break;
 						}
 						this.throwError("incomplete OR operator found, OR operators must be of boolean type '||'");
+						break;
 
 					case '&':
 						if (this.isNotEnd() && this.look === '&') {
@@ -398,7 +399,8 @@ class Tokenizer {
 							break;
 						}
 						this.throwError("incomplete AND operator found, AND operators must be of boolean type '&&'");
-
+						break;
+						
 					case '!':
 						if (this.isNotEnd() && this.look === '=') {
 							this.getChar();
@@ -442,4 +444,3 @@ class Tokenizer {
 	}
 
 }
-module.exports = Tokenizer;

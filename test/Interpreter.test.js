@@ -1,5 +1,5 @@
-const {Interpreter, StringObj, NumberObj, BoolObj} = require('../Interpreter');
-const testCode=require('./testCode');
+import Interpreter, {StringObj, NumberObj, BoolObj} from '../Interpreter';
+import testCode from './testCode';
 
 let consoleStream = "";
 const print = (popFn) => {
@@ -37,7 +37,7 @@ describe("Interpreter",()=>{
 
 	it("Passes runtime tests without optimization",()=>{
 		let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted, numberOfTestsPassed];
-		let retObj = interpreter.runCode(testCode, null, false, false, ...imports );
+		let retObj = interpreter.runCode(testCode, null, false, true, ...imports );
 
 		if (!consoleStream.includes("All tests passed.")){
 			console.log(consoleStream);

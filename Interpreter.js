@@ -1,16 +1,17 @@
-const {StringObj, NumberObj, BoolObj}=require('./OpObjs');
-const Tokenizer = require('./Tokenizer');
-const {Parser, IdentityType} = require('./Parser');
+import {StringObj, NumberObj, BoolObj} from './OpObjs';
+import Tokenizer from './Tokenizer';
+import Parser, {IdentityType} from './Parser';
 
+export {NumberObj, BoolObj, StringObj};
 
-class Interpreter {
+export default class Interpreter {
 
 	static funcDef(name, func, returnType, ...params){
 		let builtDef={name, func, type: IdentityType.Function};
 
 		builtDef.params=[];
 
-		let type=returnType.toLowerCase().trim();
+		const type=returnType.toLowerCase().trim();
 		switch (type){
 			case "bool":
 				builtDef.returnType=IdentityType.Bool;
@@ -26,7 +27,7 @@ class Interpreter {
 		}
 
 		for (let i=0;i<params.length;i++){
-			type=params[i].toLowerCase().trim();
+			const type=params[i].toLowerCase().trim();
 			switch (type){
 				case "bool":
 					builtDef.params.push(IdentityType.Bool);
@@ -91,8 +92,8 @@ class Interpreter {
 			}
 
 			//Tokenize
-			let tokenizer=new Tokenizer();
-			let tokenList=tokenizer.tokenize(code);
+			const tokenizer=new Tokenizer();
+			const tokenList=tokenizer.tokenize(code);
 
 			//Parse and generate byte code
 			let parser=new Parser(tokenList);
@@ -104,13 +105,12 @@ class Interpreter {
 			}
 
 			//Execute the byte code
-			let exitObject=program.execute(executeExternList);
+			const exitObject=program.execute(executeExternList);
 
 			return {exitObject: exitObject, disassembled: disassembled};
 		} catch (error){
+			console.log(disassembled);
 			return {error: error, disassembled};
 		}
 	}
 }
-
-module.exports={Interpreter, StringObj, NumberObj, BoolObj};

@@ -1,6 +1,6 @@
-const {Interpreter, StringObj, NumberObj, BoolObj} = require('../Interpreter');
-const {Program, UnlinkedType} = require("../Program");
-const { IdentityType } = require('../Utils');
+import Interpreter from '../Interpreter';
+import Program from "../Program";
+import { IdentityType } from '../Utils';
 
 describe("Program",()=>{
     it("a=a produces smaller program when optimized",()=>{
