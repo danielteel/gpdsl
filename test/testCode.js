@@ -1,5 +1,4 @@
-const testCode = `
-string failedTests="";
+const testCode = `string failedTests="";
 double failedTestCount=0;
 numberOfTestsPassed=0;
 
