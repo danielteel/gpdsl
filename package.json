@@ -1,6 +1,6 @@
 {
   "name": "@dteel/interpreter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "javascript interpreter for whatever this language is called",
   "main": "Interpreter.js",
   "scripts": {
