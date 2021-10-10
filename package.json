@@ -1,7 +1,7 @@
 {
   "name": "@dteel/gpdsl",
-  "version": "1.0.3",
-  "description": "javascript interpreter for whatever this language is called",
+  "version": "1.0.4",
+  "description": "General Purpose Domain Specific Language",
   "main": "Interpreter.js",
   "scripts": {
     "test": "jest --coverage"
@@ -18,14 +18,5 @@
   "homepage": "https://github.com/danielteel/Interpreter#readme",
   "devDependencies": {
     "jest": "^26.6.3"
-  },
-  "expo": {
-    "web": {
-      "build": {
-        "babel": {
-          "include": ["static-container"]
-        }
-      }
-    }
   }
 }
