@@ -1,8 +1,8 @@
 {
   "name": "@dteel/gpdsl",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "General Purpose Domain Specific Language",
-  "main": "Interpreter.mjs",
+  "main": "Interpreter.js",
   "type": "module",
   "scripts": {
     "test": "jest"
