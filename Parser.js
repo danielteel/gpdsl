@@ -1,9 +1,6 @@
-// import {IdentityType} from "./Utils";
-// import Program from "./Program";
-// import {TokenType} from "./Tokenizer";
-const {IdentityType} = require('./Utils');
-const {Program} = require('./Program');
-const {TokenType} = require('./Tokenizer');
+import {IdentityType} from "./Utils.js";
+import {Program} from "./Program.js";
+import {TokenType} from "./Tokenizer.js";
 
 
 class Parser {
@@ -1203,6 +1200,4 @@ class Parser {
 }
 
 
-//export {IdentityType};
-//export default Parser;
-module.exports={IdentityType, Parser};
+export {Parser, IdentityType};

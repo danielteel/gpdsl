@@ -1,7 +1,6 @@
-const {Tokenizer, TokenType} =  require('../Tokenizer');
+import {Tokenizer, TokenType} from '../Tokenizer';
 
 describe("Tokenizer",()=>{
-
     let tokenizer;
 
     beforeEach(()=>{

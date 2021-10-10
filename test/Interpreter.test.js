@@ -1,5 +1,5 @@
-const {Interpreter, StringObj, NumberObj, BoolObj} = require('../Interpreter');
-const {testCode} = require('./testCode');
+import {Interpreter, StringObj, NumberObj, BoolObj} from '../Interpreter.js';
+import {testCode} from './testCode.js';
 
 let consoleStream = "";
 const print = (popFn) => {

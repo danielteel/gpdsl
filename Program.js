@@ -1,7 +1,5 @@
-//import Utils, {IdentityType} from "./Utils";
-//import {OpObjType, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} from './OpObjs';
-const {Utils, IdentityType} = require('./Utils');
-const {OpObjType, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} = require('./OpObjs');
+import {Utils, IdentityType} from "./Utils.js";
+import {OpObjType, NullObj, RegisterObj, StringObj, NumberObj, BoolObj} from './OpObjs.js';
 
 
 const OpCode = {
@@ -997,6 +995,4 @@ class Program {
 }
 
 
-//export {OpCode, UnlinkedType};
-//export default Program;
-module.exports={OpCode, UnlinkedType, Program};
+export {Program, OpCode, UnlinkedType};

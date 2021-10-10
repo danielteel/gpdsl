@@ -1,6 +1,4 @@
-//import Utils from './Utils';
-const {Utils} = require('./Utils');
-
+import {Utils} from './Utils.js';
 
 const OpObjType={
 	bool: Symbol("bool"),
@@ -367,5 +365,4 @@ class StringObj extends OpObj {
 	}
 }
 
-module.exports = {OpObjType, OpObj, NullObj, RegisterObj, StringObj, BoolObj, NumberObj};
-//export {OpObjType, OpObj, NullObj, RegisterObj, StringObj, BoolObj, NumberObj};
+export {OpObjType, OpObj, NullObj, RegisterObj, StringObj, BoolObj, NumberObj};

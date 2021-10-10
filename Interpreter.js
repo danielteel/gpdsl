@@ -1,10 +1,6 @@
-// import {StringObj, NumberObj, BoolObj} from './OpObjs';
-// import Tokenizer from './Tokenizer';
-// import Parser, {IdentityType} from './Parser';
-const {StringObj, NumberObj, BoolObj} = require('./OpObjs');
-const {Tokenizer} = require('./Tokenizer');
-const {Parser, IdentityType} = require('./Parser');
-
+import {StringObj, NumberObj, BoolObj} from './OpObjs.js';
+import {Tokenizer} from './Tokenizer.js';
+import {Parser, IdentityType} from './Parser.js';
 
 class Interpreter {
 
@@ -117,7 +113,4 @@ class Interpreter {
 }
 
 
-
-module.exports={Interpreter, NumberObj, BoolObj, StringObj}
-//export {NumberObj, BoolObj, StringObj};
-//export default Interpreter;
+export {Interpreter, NumberObj, BoolObj, StringObj};

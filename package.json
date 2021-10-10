@@ -2,9 +2,10 @@
   "name": "@dteel/gpdsl",
   "version": "1.0.4",
   "description": "General Purpose Domain Specific Language",
-  "main": "Interpreter.js",
+  "main": "Interpreter.mjs",
+  "type": "module",
   "scripts": {
-    "test": "jest --coverage"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -17,6 +18,10 @@
   },
   "homepage": "https://github.com/danielteel/Interpreter#readme",
   "devDependencies": {
-    "jest": "^26.6.3"
-  }
+    "@babel/core": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "babel-jest": "^27.2.5",
+    "jest": "^27.2.5"
+  },
+  "dependencies": {}
 }

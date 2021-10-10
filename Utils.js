@@ -17,6 +17,4 @@ const IdentityType = {
 	Function: Symbol("Function")
 }
 
-//export {IdentityType};
-//export default Utils;
-module.exports={Utils, IdentityType};
+export {Utils, IdentityType};

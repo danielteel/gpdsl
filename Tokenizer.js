@@ -445,6 +445,4 @@ class Tokenizer {
 }
 
 
-//export {TokenType};
-//export default Tokenizer;
-module.exports={TokenType, Tokenizer};
+export {Tokenizer, TokenType};

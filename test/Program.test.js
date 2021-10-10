@@ -1,6 +1,6 @@
-const {Interpreter} =  require('../Interpreter');
-const {Program} =  require("../Program");
-const {IdentityType} =  require('../Utils');
+import {Interpreter} from '../Interpreter';
+import {Program} from '../Program';
+import {IdentityType} from '../Utils';
 
 describe("Program",()=>{
     it("a=a produces smaller program when optimized",()=>{

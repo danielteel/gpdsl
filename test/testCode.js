@@ -425,4 +425,4 @@ print("Testing time = "+string(time()-startTime)+"ms");
 exit testDone();
 `;
 
-module.exports={testCode}
+export {testCode};
