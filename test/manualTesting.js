@@ -39,5 +39,7 @@ let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publication
 
 const interpreter = new Interpreter();
 let retObj = interpreter.runCode(testCode, null, true, false, imports);
-console.log(retObj.exitObject.value);
-console.log("Number of passed tests: "+numberOfTestsPassed.value);
+console.log("Optimized: ","Number of passed tests: "+numberOfTestsPassed.value);
+
+retObj = interpreter.runCode(testCode, null, true, false, imports);
+console.log("Not optimized: ","Number of passed tests: "+numberOfTestsPassed.value);

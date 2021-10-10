@@ -110,6 +110,66 @@ class Interpreter {
 			return {error: error, disassembled};
 		}
 	}
+	
+	getDisassembled(code, expectedExitType, optimize, ...externals){
+		try {
+			if (expectedExitType){
+				switch (expectedExitType.toLowerCase().trim()){
+					case "string":
+						expectedExitType=IdentityType.String;
+						break;
+					case "double":
+						expectedExitType=IdentityType.Double;
+						break;
+					case "bool":
+						expectedExitType=IdentityType.Bool;
+						break;
+					case "null":
+						expectedExitType=IdentityType.Null;
+						break;
+					default:
+						expectedExitType=null;
+				}
+			}
+
+			if (Array.isArray(externals[0])) externals=[...externals[0]];
+
+			//Build the external parsing list and execution list
+			const parserExternList=[];
+			const executeExternList=[];
+			if (externals && externals.length>0){
+				for (let i=0;i<externals.length;i++){
+					if (externals[i] instanceof StringObj){
+						parserExternList.push({name: externals[i].name, type: IdentityType.String});
+						executeExternList.push(externals[i]);
+					}else if (externals[i] instanceof NumberObj){
+						parserExternList.push({name: externals[i].name, type: IdentityType.Double});
+						executeExternList.push(externals[i]);
+					}else if (externals[i] instanceof BoolObj){
+						parserExternList.push({name: externals[i].name, type: IdentityType.Bool});
+						executeExternList.push(externals[i]);
+					}else{
+						parserExternList.push(externals[i]);
+						executeExternList.push(externals[i].func);
+					}
+				}
+			}
+
+			//Tokenize
+			const tokenizer=new Tokenizer();
+			const tokenList=tokenizer.tokenize(code);
+
+			//Parse and generate byte code
+			let parser=new Parser(tokenList);
+			const program=parser.parse(optimize, expectedExitType, parserExternList);
+
+			const disassembled = program.getDebugOutput();
+
+			return disassembled;
+		} catch (error){
+			return 'Error: '+error;
+		}
+	}
 }
 
 
