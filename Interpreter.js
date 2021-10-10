@@ -1,5 +1,5 @@
 import {StringObj, NumberObj, BoolObj} from './OpObjs.js';
-import {Tokenizer} from './Tokenizer.js';
+import {Tokenizer, TokenType} from './Tokenizer.js';
 import {Parser, IdentityType} from './Parser.js';
 
 class Interpreter {
@@ -113,4 +113,4 @@ class Interpreter {
 }
 
 
-export {Interpreter, NumberObj, BoolObj, StringObj};
+export {Interpreter, NumberObj, BoolObj, StringObj, Tokenizer, TokenType, IdentityType};

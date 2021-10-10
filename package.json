@@ -1,6 +1,6 @@
 {
   "name": "@dteel/gpdsl",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "General Purpose Domain Specific Language",
   "main": "Interpreter.js",
   "type": "module",
