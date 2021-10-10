@@ -35,9 +35,9 @@ const isInterpreted = new BoolObj("isInterpreted", true, true);
 //Define an imported number variable that the program will modify, we are able to access this after execution
 const numberOfTestsPassed = new NumberObj("numberOfTestsPassed", 0, false);
 
-let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted,  numberOfTestsPassed];
+let imports = [timeFn, printFn, notFn, reverseFn, negFn, authorName, publicationYear, isInterpreted, numberOfTestsPassed];
 
 const interpreter = new Interpreter();
-let retObj = interpreter.runCode( testCode, null, false, false, ...imports );
+let retObj = interpreter.runCode(testCode, null, true, false, imports);
 console.log(retObj.exitObject.value);
 console.log("Number of passed tests: "+numberOfTestsPassed.value);

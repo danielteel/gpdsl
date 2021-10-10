@@ -73,26 +73,6 @@ const UnlinkedType={
 
 
 class Program {
-	static regSymbols = {eax: Symbol("eax"), ebx: Symbol("ebx"), ecx: Symbol("ecx")};
-	static unlinkedReg(registerName){
-		switch (registerName.trim().toLowerCase()){
-				case "eax":	return {type: UnlinkedType.register, register: Program.regSymbols.eax, debugName:"eax"}
-				case "ebx":	return {type: UnlinkedType.register, register: Program.regSymbols.ebx, debugName:"ebx"}
-				case "ecx":	return {type: UnlinkedType.register, register: Program.regSymbols.ecx, debugName:"ecx"}
-				default:
-		}
-		this.otherError("no register with the name "+registerName+" exists");
-	}
-	static unlinkedVariable(type, scope, index, debugName=null)	{ return {type: UnlinkedType.variable,	identType: type,	scope, index, debugName}; }
-	static unlinkedLiteral(type, value)							{ return {type: UnlinkedType.literal,	literalType: type,	value}; }
-	static unlinkedNull()										{ return {type: UnlinkedType.null}; }
-
-	static CodeState = {
-		BUILDING:	Symbol("Building"),
-		OPTIMIZED:	Symbol("Optimized"),
-		READY:		Symbol("Ready"),
-	}
-
 	constructor(){
 		this.errorObj=null;
 		this.code=[];
@@ -992,6 +972,26 @@ class Program {
 		return output;
 	}
 
+}
+
+Program.regSymbols = {eax: Symbol("eax"), ebx: Symbol("ebx"), ecx: Symbol("ecx")};
+Program.unlinkedReg = (registerName) => {
+	switch (registerName.trim().toLowerCase()){
+			case "eax":	return {type: UnlinkedType.register, register: Program.regSymbols.eax, debugName:"eax"}
+			case "ebx":	return {type: UnlinkedType.register, register: Program.regSymbols.ebx, debugName:"ebx"}
+			case "ecx":	return {type: UnlinkedType.register, register: Program.regSymbols.ecx, debugName:"ecx"}
+			default:
+	}
+	this.otherError("no register with the name "+registerName+" exists");
+}
+Program.unlinkedVariable = (type, scope, index, debugName=null) => { return {type: UnlinkedType.variable, identType: type, scope, index, debugName}; }
+Program.unlinkedLiteral = (type, value) => { return {type: UnlinkedType.literal, literalType: type,	value}; }
+Program.unlinkedNull = () => ({type: UnlinkedType.null});
+
+Program.CodeState = {
+	BUILDING: Symbol("Building"),
+	OPTIMIZED: Symbol("Optimized"),
+	READY: Symbol("Ready"),
 }
 
 
