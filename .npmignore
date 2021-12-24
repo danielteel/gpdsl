@@ -4,4 +4,3 @@ coverage
 test
 *.gitignore
 .github
-babel.config.cjs
