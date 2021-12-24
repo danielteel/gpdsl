@@ -183,7 +183,7 @@ class Program {
 
 				switch (cur.type){
 					case OpCode.push:
-						if (nxt.type===OpCode.mov && nxtnxt?.type===OpCode.pop){
+						if (nxt.type===OpCode.mov && (nxtnxt?nxtnxt.type===OpCode.pop:null)){
 							if (!this.unlinkedsEqual(cur.obj0, nxt.obj0)){
 								this.code[i+2]={type: OpCode.mov, obj0: nxtnxt.obj0, obj1: cur.obj0};
 								this.code.splice(i,1);
@@ -196,12 +196,12 @@ class Program {
 						if (this.unlinkedsEqual(cur.obj0, cur.obj1)){ 	// mov(X, X) => nothing
 							this.code.splice(i,1);
 							stillOptimizing=true;
-						}else if (nxt.type===OpCode.neg && cur.obj0.type===UnlinkedType.register && this.unlinkedsEqual(cur?.obj0, nxt?.obj0) && cur.obj1.literalType===IdentityType.Double){
+						}else if (nxt.type===OpCode.neg && cur.obj0.type===UnlinkedType.register && this.unlinkedsEqual(cur?cur.obj0:null, nxt?nxt.obj0:null) && cur.obj1.literalType===IdentityType.Double){
 							cur.obj1.value=0-cur.obj1.value;
 							this.code.splice(i+1,1);
 							i--;
 							stillOptimizing=true;
-						}else if (nxt.type===OpCode.add && nxtnxt?.type===OpCode.mov &&// MOV ADD MOV => ADD
+						}else if (nxt.type===OpCode.add && (nxtnxt?nxtnxt.type===OpCode.mov:null) &&// MOV ADD MOV => ADD
 							nxt.obj0.type===UnlinkedType.register && nxt.obj1.type===UnlinkedType.register &&
 							this.unlinkedsEqual(nxt.obj0, nxtnxt.obj1) && (this.unlinkedsEqual(cur.obj0, nxt.obj1) || this.unlinkedsEqual(cur.obj0, nxt.obj0))){
 

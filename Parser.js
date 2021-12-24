@@ -40,7 +40,7 @@ class Parser {
 	}
 
 	symbolToString(sym){
-		return sym?.toString().replace("Symbol","");
+		return sym?sym.toString().replace("Symbol",""):null;
 	}
 
 	typeMismatch(expectedType, foundType){
@@ -56,11 +56,11 @@ class Parser {
 	}
 
 	match(type) {
-		if (this.token?.type === type) {
+		if (this.token ? this.token.type === type : null) {
 			this.getToken();
 		}else{
 			if (this.token){
-				this.throwError("expected token type "+ this.symbolToString(type) + " but found "+this.symbolToString(this.token?.type)+" instead");
+				this.throwError("expected token type "+ this.symbolToString(type) + " but found "+this.symbolToString(this.token?this.token.type:null)+" instead");
 			}else{
 				this.throwError("expected token type "+ this.symbolToString(type) + " but found nothing!");
 			}
@@ -76,7 +76,7 @@ class Parser {
 			this.tokenIndex++;
 			if (!this.isNotEnd()) return;
 			this.token = this.tokens[this.tokenIndex];
-			while (this.token?.type===TokenType.NewLine){
+			while (this.token?this.token.type===TokenType.NewLine:null){
 				this.program.addCodeLine(this.token.value);
 				this.tokenIndex++;
 				if (!this.isNotEnd()) return;
@@ -89,7 +89,7 @@ class Parser {
 		this.tokenIndex=0;
 		this.token=this.tokens[0];
 		
-		while (this.token?.type===TokenType.NewLine){
+		while (this.token?this.token.type===TokenType.NewLine:null){
 			this.tokenIndex++;
 			this.token = this.tokens[this.tokenIndex];
 		}
@@ -249,7 +249,7 @@ class Parser {
 	doFuncCall(funcName=null){
 		let needsIdentMatched=false;
 		if (funcName===null){
-			funcName=this.token?.value;
+			funcName=this.token?this.token.value:null;
 			needsIdentMatched=true;
 		}
 		let identObj = this.getIdentity(funcName);
@@ -304,7 +304,7 @@ class Parser {
 
 	doFactor(){
 		let type=null;
-		switch (this.token?.type){
+		switch (this.token?this.token.type:null){
 			case TokenType.Ident:
 				return this.doIdent();
 
@@ -384,7 +384,7 @@ class Parser {
 				this.match(TokenType.String);
 				this.match(TokenType.LeftParen);
 				this.doExpression();
-				if (this.token?.type===TokenType.Comma){
+				if (this.token?this.token.type===TokenType.Comma:null){
 					this.match(TokenType.Comma);
 					this.program.addPush( Program.unlinkedReg("eax") );
 					type=this.doExpression();
@@ -816,7 +816,7 @@ class Parser {
 		this.match(TokenType.For);//								for
 		this.match(TokenType.LeftParen);//							(
 
-		if (this.token?.type!==TokenType.LineDelim){//				[allocate || init]
+		if (this.token?this.token.type!==TokenType.LineDelim:null){//				[allocate || init]
 			this.doAssignOrDeclare(true);
 		}else{
 			this.match(TokenType.LineDelim);//						;
@@ -824,7 +824,7 @@ class Parser {
 
 		this.program.addLabel( compareLabel );
 
-		if (this.token?.type!==TokenType.LineDelim){//				[expression]
+		if (this.token?this.token.type!==TokenType.LineDelim:null){//				[expression]
 			if (this.doExpression()!==IdentityType.Bool){
 				this.program.addToBool( Program.unlinkedReg("eax") );
 			}
@@ -837,7 +837,7 @@ class Parser {
 
 		this.match(TokenType.LineDelim);//							;
 
-		if (this.token?.type!==TokenType.RightParen){//				[assignment] 
+		if (this.token?this.token.type!==TokenType.RightParen:null){//				[assignment] 
 			this.doAssignment(false);
 		}
 
@@ -890,7 +890,7 @@ class Parser {
 
 	doExit(){
 		this.match(TokenType.Exit);
-		if (this.token?.type !== TokenType.LineDelim){
+		if (this.token?this.token.type !== TokenType.LineDelim:null){
 			const exitType=this.doExpression();
 			if (this.expectedExitType){
 				this.matchType(exitType, this.expectedExitType);
@@ -917,7 +917,7 @@ class Parser {
 
 	doDeclare(cantBeFunction=false){
 		let declareType=null;
-		switch (this.token?.type){
+		switch (this.token?this.token.type:null){
 			case TokenType.Double:
 				declareType=IdentityType.Double;
 				break;
@@ -935,10 +935,10 @@ class Parser {
 		let isFirstOne=true;
 
 		do {
-			const varName = this.token?.value;
+			const varName = this.token?this.token.value:null;
 			this.match(TokenType.Ident);
 
-			if (cantBeFunction===false && isFirstOne && this.token?.type===TokenType.LeftParen){
+			if (cantBeFunction===false && isFirstOne && (this.token?this.token.type===TokenType.LeftParen:null)){
 				this.doFunction(varName, declareType);
 				return;
 			}else{
@@ -957,14 +957,14 @@ class Parser {
 					default:
 						this.throwError("unknown data type in declaration");
 				}
-				if (this.token?.type===TokenType.Assignment){
+				if (this.token?this.token.type===TokenType.Assignment:null){
 					this.match(TokenType.Assignment);
 					let expType=this.doExpression();
 					this.matchType(declareType, expType);
 					this.program.addMov( unlinkedVar, Program.unlinkedReg("eax") );
 				}
 			}
-			if (this.token?.type===TokenType.Comma) this.match(TokenType.Comma);
+			if (this.token?this.token.type===TokenType.Comma:null) this.match(TokenType.Comma);
 
 			isFirstOne=false;
 		} while (this.isNotEnd() && this.token.type!==TokenType.LineDelim)
@@ -1003,12 +1003,12 @@ class Parser {
 			}
 			this.match(this.token.type);
 
-			paramIdents.push(this.token?.value);
+			paramIdents.push(this.token?this.token.value:null);
 			this.match(TokenType.Ident);
 			
-			if (this.token?.type === TokenType.Comma){
+			if (this.token?this.token.type === TokenType.Comma:null){
 				this.match(TokenType.Comma);
-				if (this.token?.type===TokenType.RightParen) this.throwError("expected another parameter, but got a )");
+				if (this.token?this.token.type===TokenType.RightParen:null) this.throwError("expected another parameter, but got a )");
 			}
 		}
 		this.match(TokenType.RightParen);
@@ -1064,7 +1064,7 @@ class Parser {
 	doReturn(returnToBranch, returnType){
 		this.match(TokenType.Return);
 
-		if (this.token?.type!==TokenType.LineDelim){
+		if (this.token?this.token.type!==TokenType.LineDelim:null){
 			const expressionType=this.doExpression();
 			this.matchType(expressionType, returnType);
 		}else{

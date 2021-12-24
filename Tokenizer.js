@@ -122,7 +122,7 @@ class Tokenizer {
 			this.next();
 		}
 	
-		this.addToken(TokenType.NewLine, this.currentLineText?.trim());
+		this.addToken(TokenType.NewLine, this.currentLineText?this.currentLineText.trim():null);
 
 		return this.tokens;
 	}
